@@ -1,0 +1,32 @@
+Główny problem
+Ręczne tworzenie raportów na podstawie tekstów źródłowych jest czasochłonne i podatne na błędy, co utrudnia szybkie podejmowanie decyzji i efektywne podsumowywanie informacji.
+
+Rozwiązanie:
+Aplikacja wykorzystująca AI do automatycznego generowania przejrzystych raportów na podstawie wprowadzonego tekstu. Umożliwia szybkie tworzenie streszczeń, wyodrębnianie kluczowych informacji i formułowanie wniosków, co znacząco oszczędza czas i ułatwia analizę treści.
+
+Najmniejszy zestaw funkcjonalności
+Generowanie raportu przez AI na podstawie wprowadzonego tekstu (kopiuj-wklej)
+
+Możliwość edycji wygenerowanego raportu przed zapisaniem
+
+Historia zapisanych raportów dostępna dla użytkownika
+
+Prosty system kont użytkowników do przechowywania raportów
+
+Podział raportu na sekcje (np. streszczenie, wnioski, kluczowe dane)
+
+Co NIE wchodzi w zakres MVP
+Zaawansowana analiza danych liczbowych i wykresów
+
+Obsługa wielu formatów wejściowych (PDF, DOCX, itp.)
+
+Współdzielenie raportów między użytkownikami
+
+Integracje z zewnętrznymi systemami raportowania
+
+Aplikacje mobilne (na początek tylko web)
+
+Kryteria sukcesu
+75% raportów wygenerowanych przez AI jest akceptowane przez użytkownika
+
+Użytkownicy generują 70% raportów z wykorzystaniem AI (zamiast tworzyć je ręcznie)
