@@ -16,6 +16,7 @@ create table users (
 create table reports (
     id serial primary key,
     user_id integer not null references users(id) on delete cascade,
+    title varchar(255) not null,
     original_text text check (length(original_text) <= 10000),
     summary text check (length(summary) <= 10000),
     conclusions text check (length(conclusions) <= 10000),

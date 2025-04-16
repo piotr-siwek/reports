@@ -42,6 +42,7 @@ export type Database = {
           key_data: string | null
           original_text: string | null
           summary: string | null
+          title: string
           updated_at: string
           user_id: number
         }
@@ -52,6 +53,7 @@ export type Database = {
           key_data?: string | null
           original_text?: string | null
           summary?: string | null
+          title: string
           updated_at?: string
           user_id: number
         }
@@ -62,6 +64,7 @@ export type Database = {
           key_data?: string | null
           original_text?: string | null
           summary?: string | null
+          title?: string
           updated_at?: string
           user_id?: number
         }
