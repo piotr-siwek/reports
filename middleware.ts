@@ -20,11 +20,6 @@ interface CookieItem {
   options: Omit<RequestCookie, "name" | "value">;
 }
 
-// After the CookieItem interface, add the following:
-interface CookieSetter {
-  set(name: string, value: string, options: Omit<RequestCookie, "name" | "value">): void;
-}
-
 // Define a local interface for the Supabase client to properly type auth.getUser()
 interface SupabaseClient {
   auth: {
