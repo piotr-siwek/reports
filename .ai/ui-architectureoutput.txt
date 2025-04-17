@@ -1,0 +1,56 @@
+Okay, dziękuję za doprecyzowanie. W takim razie przechodzimy do ostatecznych rekomendacji dotyczących architektury UI, bazując na naszych ustaleniach.
+<ui_architecture_planning_output>
+<pytania>
+(Brak dalszych pytań. Poniżej znajdują się ostateczne rekomendacje.)
+</pytania>
+<rekomendacje>
+Struktura Projektu (Next.js App Router):
+app/: Główny katalog routingu.
+layout.tsx: Główny layout aplikacji (np. z nawigacją, stopką, <Toaster />, globalnym ErrorBoundary).
+(auth)/login/page.tsx, (auth)/register/page.tsx, (auth)/reset-password/page.tsx: Grupa tras dla stron uwierzytelniania (bez wspólnego layoutu grupy).
+(protected)/layout.tsx: Layout dla tras chronionych (np. weryfikujący sesję).
+(protected)/dashboard/page.tsx: Strona główna po zalogowaniu (może być tożsama z listą raportów).
+(protected)/reports/page.tsx: Widok listy raportów.
+(protected)/reports/generate/page.tsx: Widok generowania/tworzenia nowego raportu.
+(protected)/reports/[id]/page.tsx: Widok szczegółów/edycji istniejącego raportu.
+(protected)/profile/page.tsx: Widok profilu użytkownika.
+api/auth/refresh/route.ts: Dedykowany endpoint API do odświeżania tokenu JWT.
+components/ui/: Komponenty shadcn/ui i inne generyczne, reużywalne komponenty UI.
+components/feature/: Komponenty specyficzne dla danej funkcjonalności (np. ReportCard.tsx, ReportListControls.tsx, RichTextEditor.tsx, AuthForm.tsx).
+lib/: Logika pomocnicza, utils (np. utils.ts, auth.ts - logika pomocnicza dla uwierzytelniania, lexicalConfig.ts).
+hooks/: Niestandardowe hooki React (np. useAuth.ts).
+store/: Definicje store'ów Zustand (np. authStore.ts).
+actions/: Definicje Server Actions (np. reportActions.ts, authActions.ts).
+Uwierzytelnianie i Zarządzanie Sesją:
+Użycie Server Actions (actions/authActions.ts) do logowania, rejestracji, wylogowania, resetowania/zmiany hasła.
+Przechowywanie Access Token i Refresh Token w bezpiecznych httpOnly cookies.
+Odświeżanie Tokenu: Implementacja dedykowanego API Route Handler (app/api/auth/refresh/route.ts), który przyjmuje Refresh Token (z cookie) i zwraca nowy Access Token (i potencjalnie nowy Refresh Token). Funkcje pomocnicze lub Server Actions wymagające uwierzytelnionego API call powinny wewnętrznie obsługiwać błąd 401, próbując wywołać /api/auth/refresh i ponowić oryginalne żądanie z nowym tokenem. W przypadku niepowodzenia odświeżania, użytkownik powinien zostać wylogowany (wyczyszczenie cookies) i przekierowany do strony logowania.
+Ochrona tras w (protected) grupie, np. przez sprawdzenie ważności tokenu w (protected)/layout.tsx lub przy użyciu dedykowanego hooka/funkcji w komponentach/Server Actions.
+Zarządzanie Stanem:
+Preferowanie Server Actions z rewalidacją danych (revalidatePath/revalidateTag) jako głównego mechanizmu aktualizacji danych.
+Użycie lokalnego stanu komponentów (useState, useReducer) dla stanów UI (np. otwarcie modala, stan formularza przed wysłaniem).
+Użycie Zustand (store/authStore.ts) do zarządzania globalnym stanem uwierzytelnienia użytkownika. Inne globalne stany dodawać tylko w razie wyraźnej potrzeby.
+Użycie react-hook-form i zod do zarządzania formularzami (logowanie, rejestracja, profil, tytuł raportu) i walidacji, integrując je z Server Actions.
+Generowanie i Edycja Raportów:
+Widok generowania (reports/generate): Pole tekstowe (shadcn/ui Textarea) na tekst źródłowy, przycisk "Generuj". Po kliknięciu, wywołanie Server Action (POST /reports/generate), która zwraca wstępnie wygenerowane sekcje.
+Widok edycji (reports/[id] lub po wygenerowaniu w reports/generate):
+Pole Input (react-hook-form) dla tytułu raportu.
+Komponent <RichTextEditor /> (enkapsulujący Lexical) dla edycji treści (streszczenie, wnioski, kluczowe dane). Komponent zarządza swoim stanem wewnętrznie.
+Przycisk "Zapisz", który wywołuje Server Action. Akcja ta pobiera tytuł z react-hook-form oraz serializowaną zawartość HTML z instancji Lexical (np. przez ref lub dedykowaną funkcję komponentu <RichTextEditor />).
+W Server Action: Walidacja połączonych danych (tytuł + treść) przez Zod, sanityzacja HTML z Lexical przez DOMPurify, wywołanie API (POST /reports lub PUT /reports/{id}).
+Obsługa API i Błędów:
+Użycie Server Actions jako głównego interfejsu do komunikacji z API backendowym.
+Przyjęcie standardowej struktury odpowiedzi Server Actions: { success: boolean, data: T | null, errors: Record<string, string[]> | null, message: string | null }.
+Wyświetlanie błędów walidacji Zod przy odpowiednich polach formularza (react-hook-form).
+Użycie komponentu Toast (shadcn/ui) do wyświetlania ogólnych komunikatów o sukcesie lub błędach (z message).
+Implementacja globalnego ErrorBoundary w app/layout.tsx z generycznym komunikatem błędu i opcją odświeżenia.
+Komponenty UI i Stylizacja:
+Konsekwentne użycie komponentów shadcn/ui (np. Button, Input, Textarea, Card, Table, Dialog, Toast, Pagination) dla spójnego wyglądu.
+Wykorzystanie Tailwind CSS do stylizacji, zgodnie z konfiguracją shadcn/ui.
+Implementacja responsywności: Widok listy raportów zmieniający się z Table na listę komponentów ReportCard na mniejszych ekranach. Układ edytora raportów dostosowujący się do szerokości ekranu (np. sekcje jedna pod drugą).
+Dodanie subtelnych animacji wejścia (framer-motion) dla kluczowych elementów interfejsu.
+Dostępność:
+Zapewnienie zgodności ze standardami WCAG poprzez semantyczne HTML, atrybuty ARIA (wspierane przez shadcn/ui) i testowanie nawigacji klawiaturą oraz czytnikami ekranu.
+Te rekomendacje powinny stanowić solidną podstawę do rozpoczęcia implementacji interfejsu użytkownika dla MVP. Daj znać, jeśli potrzebujesz dalszych doprecyzowań lub chcesz przejść do kolejnego etapu.
+</rekomendacje>
+</ui_architecture_planning_output>
