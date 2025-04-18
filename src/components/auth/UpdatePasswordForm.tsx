@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { updatePassword, UpdatePasswordActionState } from "../../../actions/auth"; // Import action and state
+import { updatePassword, UpdatePasswordActionState } from "../../actions/auth"; // Import action and state
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";

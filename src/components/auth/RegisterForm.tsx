@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { registerUser, RegisterActionState } from "../../../actions/auth"; // Import action and state type
+import { registerUser, RegisterActionState } from "../../actions/auth"; // Import action and state type
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
