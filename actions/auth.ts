@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr'; // Import Supabase server client and CookieOptions type
-import { LoginFormSchema } from "@/lib/validators/auth"; // Removed unused LoginFormValues
+import { LoginFormSchema, RegisterFormSchema } from "@/lib/validators/auth"; // Import both schemas
 // import { LoginCommand, LoginResponseDto } from "@/types"; // Removed custom API types
 
 // Type for the state managed by useActionState
@@ -12,6 +12,14 @@ export interface LoginActionState {
   error?: string;
   // Optionally add fieldErrors for more specific validation messages
   // fieldErrors?: Partial<Record<keyof LoginFormValues, string>>;
+}
+
+// State for Registration Action
+export interface RegisterActionState {
+  success: boolean;
+  message?: string;
+  error?: string;
+  // fieldErrors?: Partial<Record<keyof z.infer<typeof RegisterFormSchema>, string>>; // Optional for field errors
 }
 
 // TODO: Move Supabase credentials to environment variables
@@ -117,4 +125,84 @@ export async function loginUser(
     return { success: false, error: "Wystąpił błąd podczas próby logowania." };
   }
   */
+}
+
+// --- Register Action ---
+export async function registerUser(
+  previousState: RegisterActionState,
+  formData: FormData
+): Promise<RegisterActionState> {
+
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+  const data = { email, password, confirmPassword };
+
+  // 1. Validate data using Zod
+  const validationResult = RegisterFormSchema.safeParse(data);
+  if (!validationResult.success) {
+    // Basic error message, could be enhanced with fieldErrors from validationResult.error
+    return {
+      success: false,
+      error: "Nieprawidłowe dane formularza. Sprawdź błędy poniżej.",
+      // fieldErrors: validationResult.error.flatten().fieldErrors // Example if needed
+    };
+  }
+
+  // 2. Proceed with Supabase sign up
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      cookies: {
+        getAll() {
+          // @ts-expect-error Assuming cookies() returns store synchronously despite lint error
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+          try {
+            // @ts-expect-error Assuming cookies() returns store synchronously despite lint error
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+          } catch {
+            // Ignore errors
+          }
+        }
+      },
+    }
+  );
+
+  // Call Supabase signUp
+  const { data: signUpData, error } = await supabase.auth.signUp({
+    email: validationResult.data.email,
+    password: validationResult.data.password,
+    // We can optionally add emailRedirectTo or other options here if needed
+    // options: {
+    //   emailRedirectTo: `${origin}/auth/callback`,
+    // }
+  });
+
+  if (error) {
+    console.error('Supabase signUp error:', error.message);
+    // Check for specific Supabase errors
+    if (error.message.includes('User already registered')) {
+      return { success: false, error: "Adres email jest już zajęty." };
+    }
+    if (error.message.includes('Password should be at least 6 characters')) {
+      // Although Zod checks for 8, Supabase might have its own minimum (default is 6)
+       return { success: false, error: "Hasło jest zbyt krótkie (wymagane min. 6 znaków wg Supabase)." };
+    }
+    // Generic error for other cases
+    return { success: false, error: error.message || "Wystąpił błąd podczas rejestracji." };
+  }
+
+  // Determine success message based on whether email confirmation is needed
+  // signUpData.user?.identities might be empty if confirmation is required
+  const requiresConfirmation = !signUpData.session && !!signUpData.user;
+  const successMessage = requiresConfirmation
+    ? "Konto utworzone! Sprawdź email, aby potwierdzić rejestrację."
+    : "Konto zostało pomyślnie utworzone!";
+
+  return { success: true, message: successMessage };
+
 } 
