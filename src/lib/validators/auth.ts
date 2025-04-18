@@ -14,4 +14,13 @@ export const RegisterFormSchema = z.object({
   path: ["confirmPassword"],
 });
 
-export type LoginFormValues = z.infer<typeof LoginFormSchema>; 
+export type LoginFormValues = z.infer<typeof LoginFormSchema>;
+
+// --- Reset Password Confirm Schema ---
+export const ResetPasswordConfirmSchema = z.object({
+  newPassword: z.string().min(8, { message: "Nowe hasło musi mieć co najmniej 8 znaków." }),
+  confirmNewPassword: z.string().min(1, { message: "Potwierdzenie nowego hasła jest wymagane." })
+}).refine((data) => data.newPassword === data.confirmNewPassword, {
+  message: "Hasła nie są zgodne.",
+  path: ["confirmNewPassword"], // Assign error to confirmNewPassword field
+}); 

@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr'; // Import Supabase server client and CookieOptions type
-import { LoginFormSchema, RegisterFormSchema } from "@/lib/validators/auth"; // Import both schemas
+import { LoginFormSchema, RegisterFormSchema, ResetPasswordConfirmSchema } from "@/lib/validators/auth"; // Import both schemas
 // import { LoginCommand, LoginResponseDto } from "@/types"; // Removed custom API types
 
 // Type for the state managed by useActionState
@@ -20,6 +20,13 @@ export interface RegisterActionState {
   message?: string;
   error?: string;
   // fieldErrors?: Partial<Record<keyof z.infer<typeof RegisterFormSchema>, string>>; // Optional for field errors
+}
+
+// State for Update Password Action
+export interface UpdatePasswordActionState {
+  success: boolean;
+  message?: string;
+  error?: string;
 }
 
 // TODO: Move Supabase credentials to environment variables
@@ -205,4 +212,71 @@ export async function registerUser(
 
   return { success: true, message: successMessage };
 
+}
+
+// --- Update Password Action (after reset link click) ---
+export async function updatePassword(
+  previousState: UpdatePasswordActionState,
+  formData: FormData
+): Promise<UpdatePasswordActionState> {
+
+  const newPassword = formData.get('newPassword') as string;
+  const confirmNewPassword = formData.get('confirmNewPassword') as string;
+  const data = { newPassword, confirmNewPassword };
+
+  // 1. Validate data using Zod
+  const validationResult = ResetPasswordConfirmSchema.safeParse(data);
+  if (!validationResult.success) {
+    return {
+      success: false,
+      error: validationResult.error.flatten().fieldErrors.confirmNewPassword?.[0] || // Prioritize mismatch error
+             validationResult.error.flatten().fieldErrors.newPassword?.[0] || // Then password error
+             "Nieprawidłowe dane formularza.", // Fallback
+    };
+  }
+
+  // 2. Proceed with Supabase update user
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      cookies: {
+        getAll() {
+          // @ts-expect-error Assuming cookies() returns store synchronously despite lint error
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+          try {
+            // @ts-expect-error Assuming cookies() returns store synchronously despite lint error
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+          } catch {
+            // Ignore errors
+          }
+        }
+      },
+    }
+  );
+
+  // Call Supabase updateUser - it uses the session recovered from the reset link
+  const { error } = await supabase.auth.updateUser({
+    password: validationResult.data.newPassword,
+  });
+
+  if (error) {
+    console.error('Supabase updateUser error:', error.message);
+    // Handle common errors (e.g., token expired/invalid, password policy)
+    if (error.message.includes('Password should be different')) {
+      return { success: false, error: "Nowe hasło musi być inne niż stare." };
+    }
+    if (error.message.includes('Password should be at least')) {
+      return { success: false, error: "Hasło nie spełnia wymagań bezpieczeństwa." };
+    }
+    // Check for AuthApiError with specific status if needed (e.g., 401, 422)
+    // Example: (error instanceof AuthApiError && error.status === 401)
+    return { success: false, error: "Nie udało się zaktualizować hasła. Link mógł wygasnąć lub wystąpił inny błąd." };
+  }
+
+  // Password update successful
+  return { success: true, message: "Hasło zostało pomyślnie zmienione." };
 } 
