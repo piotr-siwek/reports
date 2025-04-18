@@ -23,4 +23,9 @@ export const ResetPasswordConfirmSchema = z.object({
 }).refine((data) => data.newPassword === data.confirmNewPassword, {
   message: "Hasła nie są zgodne.",
   path: ["confirmNewPassword"], // Assign error to confirmNewPassword field
+});
+
+// --- Reset Password Request Schema ---
+export const ResetPasswordRequestSchema = z.object({
+  email: z.string().email({ message: "Nieprawidłowy adres email." }),
 }); 

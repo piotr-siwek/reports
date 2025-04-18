@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr'; // Import Supabase server client and CookieOptions type
-import { LoginFormSchema, RegisterFormSchema, ResetPasswordConfirmSchema } from "@/lib/validators/auth"; // Import both schemas
+import { LoginFormSchema, RegisterFormSchema, ResetPasswordConfirmSchema, ResetPasswordRequestSchema } from "@/lib/validators/auth"; // Import both schemas
 // import { LoginCommand, LoginResponseDto } from "@/types"; // Removed custom API types
 
 // Type for the state managed by useActionState
@@ -27,6 +27,13 @@ export interface UpdatePasswordActionState {
   success: boolean;
   message?: string;
   error?: string;
+}
+
+// State for Password Reset Request Action
+export interface RequestPasswordResetActionState {
+  success: boolean;
+  message?: string; // Always use message, even for potential errors, to avoid leaking info
+  error?: string; // Only for unexpected server errors
 }
 
 // TODO: Move Supabase credentials to environment variables
@@ -279,4 +286,73 @@ export async function updatePassword(
 
   // Password update successful
   return { success: true, message: "Hasło zostało pomyślnie zmienione." };
+}
+
+// --- Request Password Reset Action ---
+export async function requestPasswordReset(
+  previousState: RequestPasswordResetActionState,
+  formData: FormData
+): Promise<RequestPasswordResetActionState> {
+
+  const email = formData.get('email') as string;
+
+  // 1. Validate data using Zod
+  const validationResult = ResetPasswordRequestSchema.safeParse({ email });
+  if (!validationResult.success) {
+    return {
+      success: false,
+      // Return validation error message directly in 'message' field for UI consistency
+      message: validationResult.error.flatten().fieldErrors.email?.[0] || "Nieprawidłowy adres email.",
+    };
+  }
+
+  // 2. Proceed with Supabase password reset request
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      cookies: {
+        getAll() {
+          // @ts-expect-error Assuming cookies() returns store synchronously despite lint error
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+          try {
+            // @ts-expect-error Assuming cookies() returns store synchronously despite lint error
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+          } catch {
+            // Ignore errors
+          }
+        }
+      },
+    }
+  );
+
+  // Define the redirect URL (where the user sets the new password)
+  // Ensure this matches the page created in the previous step (UpdatePasswordPage)
+  const redirectURL = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/update-password`;
+
+  // Call Supabase resetPasswordForEmail
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    validationResult.data.email,
+    {
+      redirectTo: redirectURL,
+    }
+  );
+
+  if (error) {
+    console.error('Supabase resetPasswordForEmail error:', error);
+    // For security, do not reveal specific errors like "User not found"
+    // Only return a generic message or handle unexpected server errors
+    // You might want to log the specific error for debugging purposes
+    return {
+      success: false, // Or true, depending on how you want to handle this for the UI
+      message: "Jeśli konto istnieje, link do resetowania hasła został wysłany.",
+      error: "Wystąpił nieoczekiwany błąd serwera.", // Optionally signal a true server error
+    };
+  }
+
+  // Always return a success-like message to prevent email enumeration attacks
+  return { success: true, message: "Jeśli konto powiązane z tym adresem email istnieje, wysłaliśmy na nie link do zresetowania hasła." };
 } 
