@@ -10,7 +10,7 @@ Widok będzie dostępny pod główną chronioną ścieżką: `/reports`. Może i
 
 ## 3. Struktura komponentów
 ```
-app/
+src/app/
 └── (protected)/                   # Layout dla zalogowanych użytkowników
     ├── layout.tsx               # Navbar, logika ochrony trasy
     └── reports/
@@ -52,7 +52,7 @@ src/components/reports/
 ```
 
 ## 4. Szczegóły komponentów
-### `ReportsPage` (`app/(protected)/reports/page.tsx`)
+### `ReportsPage` (`src/app/(protected)/reports/page.tsx`)
 - **Opis:** Główny SC strony `/reports`. Odczytuje `searchParams` i przekazuje je do `ReportListWrapper` oraz `ReportsPagination`. Renderuje strukturę strony.
 - **Główne elementy:** Nagłówek, `Button` "Generuj Nowy Raport", `ReportFilterInput`, `Suspense` wokół `ReportListWrapper`, `ReportsPagination`.
 - **Propsy:** `{ searchParams?: { page?: string; filter?: string; sort?: string; limit?: string; } }`
