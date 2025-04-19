@@ -60,7 +60,7 @@ const reportEditSchemaServer = z.object({
   conclusions: z.string().max(10000, "Wnioski są za długie (max 10000 znaków).").optional(),
   keyData: z.string().max(10000, "Kluczowe dane są za długie (max 10000 znaków).").optional(),
 });
-type ReportEditFormViewModel = z.infer<typeof reportEditSchemaServer>;
+// type ReportEditFormViewModel = z.infer<typeof reportEditSchemaServer>; // Removed unused type
 
 // Type for the return value of updateReportAction
 export type UpdateReportActionResult = {
@@ -217,7 +217,6 @@ export async function listReports({
       .from('reports')
       // Select only the fields needed for ReportSummaryDto
       .select('id, title, summary, created_at', { count: 'exact' })
-      .eq('user_id', user.id) // Ensure user only sees their reports (redundant if RLS is solid)
       .order(sortField as keyof Tables<'reports'>, { ascending: sortOrder === 'asc' })
       .range(offset, offset + limit - 1);
 
@@ -278,7 +277,6 @@ export async function deleteReport(reportId: number): Promise<{ success: boolean
       .from('reports')
       .delete()
       .eq('id', reportId);
-      // .eq('user_id', user.id); // RLS makes this redundant but safe to keep
 
     if (error) {
       console.error('Error deleting report:', error);
