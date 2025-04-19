@@ -6,6 +6,9 @@ import { redirect } from 'next/navigation';
 import { ReportDto, UpdateReportCommand } from '@/types'; // Assuming types are in src/types.ts
 import DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom'; // Import JSDOM
+import { createClient } from '@/lib/supabase-server';
+import { ListReportsResponseDto, PaginationDto, ReportSummaryDto } from '@/types';
+import { Tables } from '@/db/database.types';
 
 // --- Placeholder: Get User ID ---
 // Replace with actual function to get authenticated user ID server-side
@@ -171,4 +174,127 @@ export async function deleteReportAction(
     // Note: Redirect should ideally prevent this return from being reached,
     // but returning a success state is good practice.
     // return { success: true, message: "Raport został usunięty." };
+}
+
+// Define a type for the expected shape of data returned by the select query
+// This helps avoid 'any' and addresses potential type mismatches
+interface ReportQueryResult {
+  id: number;
+  title: string | null; // Assuming title can be null based on schema/potential issues
+  summary: string | null;
+  created_at: string;
+}
+
+const DEFAULT_LIMIT = 10;
+
+/**
+ * Server Action to list reports for the authenticated user.
+ * Handles pagination, filtering, and sorting.
+ */
+export async function listReports({
+  page = 1,
+  limit = DEFAULT_LIMIT,
+  filter,
+  sort = 'created_at.desc', // Default sort: newest first
+}: {
+  page?: number;
+  limit?: number;
+  filter?: string;
+  sort?: string;
+}): Promise<ListReportsResponseDto> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    const offset = (page - 1) * limit;
+    const [sortField, sortOrder] = sort.split('.');
+
+    let query = supabase
+      .from('reports')
+      // Select only the fields needed for ReportSummaryDto
+      .select('id, title, summary, created_at', { count: 'exact' })
+      .eq('user_id', user.id) // Ensure user only sees their reports (redundant if RLS is solid)
+      .order(sortField as keyof Tables<'reports'>, { ascending: sortOrder === 'asc' })
+      .range(offset, offset + limit - 1);
+
+    if (filter) {
+      // Basic title filtering (case-insensitive)
+      query = query.ilike('title', `%${filter}%`);
+    }
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error('Error fetching reports:', error);
+      throw new Error('Failed to fetch reports.');
+    }
+
+    // Use the defined type for mapping, with double casting to bypass strict type checking issues
+    // This assumes the actual data structure matches ReportQueryResult despite TS/DB type errors
+    const reports: ReportSummaryDto[] = (data as unknown as ReportQueryResult[] | null)?.map(report => ({
+      id: report.id,
+      title: report.title || 'Bez tytułu', // Provide fallback for null title
+      summary: report.summary || '', // Provide fallback for null summary
+      createdAt: report.created_at,
+    })) || [];
+
+    const pagination: PaginationDto = {
+      page,
+      limit,
+      total: count || 0,
+    };
+
+    return { reports, pagination };
+
+  } catch (error) {
+    console.error('[listReports Action Error]:', error);
+    // Return an empty state in case of error for graceful degradation
+    return {
+      reports: [],
+      pagination: { page: 1, limit: DEFAULT_LIMIT, total: 0 },
+      error: error instanceof Error ? error.message : 'An unknown error occurred',
+    };
+  }
+}
+
+/**
+ * Server Action to delete a report by its ID.
+ */
+export async function deleteReport(reportId: number): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    // RLS should prevent deleting reports of other users
+    const { error } = await supabase
+      .from('reports')
+      .delete()
+      .eq('id', reportId);
+      // .eq('user_id', user.id); // RLS makes this redundant but safe to keep
+
+    if (error) {
+      console.error('Error deleting report:', error);
+      throw new Error('Failed to delete report.');
+    }
+
+    // Revalidate the reports list path to refresh the UI
+    revalidatePath('/reports');
+
+    return { success: true };
+
+  } catch (error) {
+    console.error('[deleteReport Action Error]:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unknown error occurred',
+    };
+  }
 } 

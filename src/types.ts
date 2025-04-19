@@ -144,6 +144,7 @@ export interface PaginationDto {
 export interface ListReportsResponseDto {
   reports: ReportSummaryDto[];
   pagination: PaginationDto;
+  error?: string;
 }
 
 // Response DTO for getting detailed report information (same as full ReportDto)
