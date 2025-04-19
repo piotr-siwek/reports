@@ -1,66 +1,99 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import WorkSansSemiBold from '../../assets/fonts/WorkSans-SemiBold.ttf';
 
-// Define the props for the report document
+// Rejestracja fontu Work Sans z obsługą polskich znaków
+Font.register({
+  family: 'WorkSans',
+  fonts: [
+    { src: WorkSansSemiBold },
+  ],
+});
+
+// Definicja props dla dokumentu raportu
 interface ReportDocumentProps {
   title: string;
   summary: string;
-  conclusions: string;
+  conclusions: string[];
   keyData: string;
 }
 
-// Define styles for the PDF document
+// Style dla dokumentu PDF
 const styles = StyleSheet.create({
   page: {
     padding: 40,
     backgroundColor: '#f5f5f5',
+    fontFamily: 'WorkSans',
+    fontWeight: 'normal',
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
+    fontFamily: 'WorkSans',
+    fontWeight: '600',
+    fontSize: 26,
+    marginBottom: 30,
     textAlign: 'center',
     color: '#333',
-    fontWeight: 'bold',
   },
   section: {
-    marginBottom: 15,
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    marginBottom: 20,
+    padding: 15,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    border: '1pt solid #ddd',
   },
   header: {
-    fontSize: 16,
-    marginBottom: 6,
+    fontFamily: 'WorkSans',
+    fontWeight: '600',
+    fontSize: 18,
+    marginBottom: 10,
     color: '#007BFF',
-    fontWeight: 'bold',
   },
   text: {
-    fontSize: 12,
-    lineHeight: 1.5,
-    color: '#555',
+    fontFamily: 'WorkSans',
+    fontWeight: 'normal',
+    fontSize: 13,
+    lineHeight: 1.6,
+    color: '#333',
+  },
+  listItem: {
+    fontFamily: 'WorkSans',
+    fontWeight: 'normal',
+    fontSize: 13,
+    marginBottom: 6,
+    paddingLeft: 10,
+    color: '#333',
   },
 });
 
-// Create the ReportDocument component using react-pdf
-const ReportDocument: React.FC<ReportDocumentProps> = ({ title, summary, conclusions, keyData }) => (
-  <Document>
-    <Page style={styles.page}>
-      <Text style={styles.title}>{title || 'Niezatytułowany Raport'}</Text>
-      <View style={styles.section}>
-        <Text style={styles.header}>Podsumowanie:</Text>
-        <Text style={styles.text}>{summary}</Text>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.header}>Wnioski:</Text>
-        <Text style={styles.text}>{conclusions}</Text>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.header}>Kluczowe Dane:</Text>
-        <Text style={styles.text}>{keyData}</Text>
-      </View>
-    </Page>
-  </Document>
+// Komponent ReportDocument
+const ReportDocument: React.FC<ReportDocumentProps> = ({
+                                                         title,
+                                                         summary,
+                                                         conclusions,
+                                                         keyData,
+                                                       }) => (
+    <Document>
+      <Page style={styles.page}>
+        <Text style={styles.title}>{title || 'Niezatytułowany Raport'}</Text>
+
+        <View style={styles.section}>
+          <Text style={styles.header}>Podsumowanie:</Text>
+          <Text style={styles.text}>{summary}</Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.header}>Wnioski:</Text>
+          {conclusions.map((item, idx) => (
+              <Text key={idx} style={styles.listItem}>• {item}</Text>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.header}>Kluczowe Dane:</Text>
+          <Text style={styles.text}>{keyData}</Text>
+        </View>
+      </Page>
+    </Document>
 );
 
-export default ReportDocument; 
+export default ReportDocument;

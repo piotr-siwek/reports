@@ -23,7 +23,7 @@ import {
 
 const OpenAIResponseSchema = z.object({
   summary: z.string(),
-  conclusions: z.string(),
+  conclusions: z.string().or(z.array(z.string())),
   keyData: z.string(),
 });
 
@@ -42,17 +42,32 @@ export async function generateReportPreview(
     return { success: false, error: "Konfiguracja AI nie jest dostępna." };
   }
 
-  const prompt = `Jesteś asystentem analitycznym. Twoim zadaniem jest przeanalizowanie poniższego tekstu i zwrócenie podsumowania, kluczowych wniosków oraz najważniejszych danych w formacie JSON. Odpowiedź musi być wyłącznie obiektem JSON z kluczami "summary", "conclusions", "keyData".
+  const prompt = `
+You are an analytical assistant. Your task is to analyze the text below and return a JSON object with exactly three keys:
+  • "summary" (string): a concise summary of the text,
+  • "conclusions" (array of strings): a list of key conclusions,
+  • "keyData" (string): a single string containing ONLY all critical data points, separated by dashes or commas.
 
-Ważne: Wartość dla klucza "keyData" MUSI być pojedynczym ciągiem znaków (string). Wylistuj kluczowe dane wewnątrz tego stringu, np. używając myślników (-) lub przecinków jako separatorów.
+In particular, do NOT omit any information related to:
+  - dates (day, month, year, or time ranges),
+  - amounts (including currency and units),
+  - tasks and actions (“what needs to be done”),
+  - decisions to be made,
+  - deadlines,
+  - people, departments, or roles responsible for decisions,
+  - locations,
+  - reference numbers or identifiers,
+  - execution conditions, requirements, or KPIs.
 
-Tekst do analizy:
+Text to analyze:
 ---
 ${command.originalText}
 ---
 
-JSON:
-`;
+**The response MUST be a valid JSON object and MUST be written in Polish.**  
+No additional text or comments are allowed—only the JSON.`;
+
+  
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -62,8 +77,8 @@ JSON:
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'system', content: prompt }],
         temperature: 0.5,
         response_format: { type: "json_object" },
       }),
