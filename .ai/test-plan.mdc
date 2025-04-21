@@ -1,0 +1,487 @@
+# Szczegółowy Plan Testów dla Aplikacji "Ania-Raporty"
+
+## 1. Struktura organizacyjna testów
+
+### 1.1 Lokalizacja testów
+- **Testy jednostkowe**: umieść w tych samych katalogach co testowane pliki z przyrostkiem `.test.ts`/`.test.tsx`
+- **Testy integracyjne**: utwórz katalog `src/test/integration`
+- **Testy E2E**: utwórz katalog `src/test/e2e` z wykorzystaniem Playwright
+- **Testy wydajnościowe**: utwórz katalog `src/test/performance`
+
+### 1.2 Konfiguracja środowiska testowego
+- Rozszerz plik `src/test/setup.ts` o dodatkowe mocki potrzebne do testów
+- Dodaj konfigurację dla Playwright w katalogu głównym projektu
+- Utwórz dedykowane środowisko dla testów Supabase
+
+## 2. Krok po kroku - implementacja testów
+
+### 2.1 Testy jednostkowe - konkretna lokalizacja i plan
+
+#### Testy komponentów UI (React)
+```
+src/components/ui/**.test.tsx         // Komponenty podstawowe
+src/components/reports/**.test.tsx    // Komponenty raportów
+src/components/auth/**.test.tsx       // Komponenty autoryzacji
+src/components/shared/**.test.tsx     // Komponenty współdzielone
+src/components/feature/**.test.tsx    // Komponenty funkcjonalne
+```
+
+Priorytetowe komponenty do testowania:
+1. Komponenty formularzy autoryzacji
+2. Komponenty formularzy raportów
+3. Komponenty wyświetlania raportów
+4. Komponenty generowania raportów
+
+#### Testy serwisów i kontrolerów
+```
+src/reports/report.service.test.ts    // już istnieje, rozbuduj
+src/reports/report.controller.test.ts // do utworzenia
+```
+
+#### Testy server actions
+```
+src/actions/auth.test.ts              // Testy akcji autoryzacji
+src/actions/reports.test.ts           // Testy akcji raportów
+```
+
+Kluczowe przypadki testowe:
+1. Walidacja danych wejściowych
+2. Poprawna integracja z OpenAI API
+3. Prawidłowe mapowanie danych
+4. Obsługa błędów
+
+### 2.2 Testy integracyjne - konkretne scenariusze
+
+Utwórz następującą strukturę:
+```
+src/test/integration/auth/login.test.ts
+src/test/integration/auth/register.test.ts
+src/test/integration/reports/create-report.test.ts
+src/test/integration/reports/view-report.test.ts
+src/test/integration/ai/generate-report.test.ts
+```
+
+Kluczowe scenariusze:
+1. Pełen przepływ logowania użytkownika
+2. Pełen przepływ rejestracji użytkownika
+3. Tworzenie, edycja i usuwanie raportu
+4. Generowanie raportu z wykorzystaniem AI
+5. Eksport raportu do PDF
+
+### 2.3 Testy E2E - konkretne scenariusze
+
+Utwórz następującą strukturę z wykorzystaniem Playwright:
+```
+src/test/e2e/auth.spec.ts
+src/test/e2e/reports-list.spec.ts
+src/test/e2e/report-details.spec.ts
+src/test/e2e/report-generation.spec.ts
+```
+
+Kluczowe scenariusze E2E:
+1. Użytkownik rejestruje się, loguje i wylogowuje
+2. Użytkownik tworzy nowy raport z wykorzystaniem AI
+3. Użytkownik przegląda listę raportów, filtruje i sortuje
+4. Użytkownik generuje PDF z raportu
+
+## 3. Szczegółowy harmonogram testów i priorytety
+
+### 3.1 Pierwsza faza (krytyczne funkcjonalności)
+- **Tydzień 1**: Testy jednostkowe dla serwisów i kontrolerów raportu
+- **Tydzień 1-2**: Testy jednostkowe dla komponentów autoryzacji
+- **Tydzień 2**: Testy jednostkowe dla akcji serwera (reports.ts, auth.ts)
+- **Tydzień 3**: Testy integracyjne dla przepływu autoryzacji i podstawowych operacji na raportach
+
+### 3.2 Druga faza (rozszerzenie pokrycia)
+- **Tydzień 4**: Testy jednostkowe dla wszystkich komponentów UI
+- **Tydzień 5**: Testy integracyjne dla zaawansowanych funkcji raportów
+- **Tydzień 6**: Testy E2E dla podstawowych przepływów użytkownika
+
+### 3.3 Trzecia faza (optymalizacja i bezpieczeństwo)
+- **Tydzień 7**: Testy wydajnościowe
+- **Tydzień 8**: Testy bezpieczeństwa
+- **Tydzień 9**: Testy dostępności (WCAG)
+
+## 4. Szczegółowe przypadki testowe dla kluczowych funkcjonalności
+
+### 4.1 Generowanie raportu z tekstem źródłowym (`src/actions/reports.ts`)
+
+**Testy jednostkowe**:
+```typescript
+// src/actions/reports.test.ts
+describe('generateReportPreview', () => {
+  it('waliduje minimalną długość tekstu źródłowego', async () => {
+    // Test walidacji tekstu krótszego niż 100 znaków
+  });
+  
+  it('obsługuje brakujący klucz API', async () => {
+    // Test braku klucza API
+  });
+  
+  it('mapuje poprawnie odpowiedź z OpenAI na ReportPreviewDto', async () => {
+    // Test mapowania danych
+  });
+  
+  it('obsługuje błędy odpowiedzi OpenAI', async () => {
+    // Test obsługi błędów API
+  });
+  
+  it('weryfikuje format odpowiedzi OpenAI', async () => {
+    // Test walidacji formatu odpowiedzi
+  });
+});
+```
+
+**Testy integracyjne**:
+```typescript
+// src/test/integration/ai/generate-report.test.ts
+describe('Generowanie raportu z AI', () => {
+  it('generuje raport z poprawnym tekstem źródłowym', async () => {
+    // Test integracyjny z mockiem OpenAI
+  });
+  
+  it('zapisuje wygenerowany raport do bazy danych', async () => {
+    // Test integracyjny z bazą danych
+  });
+});
+```
+
+### 4.2 Autoryzacja użytkownika (`src/actions/auth.ts`)
+
+**Testy jednostkowe**:
+```typescript
+// src/actions/auth.test.ts
+describe('logowanie użytkownika', () => {
+  it('weryfikuje poprawne dane logowania', async () => {
+    // Test poprawnego logowania
+  });
+  
+  it('obsługuje niepoprawne dane logowania', async () => {
+    // Test błędnego logowania
+  });
+  
+  it('ustawia poprawny token sesji', async () => {
+    // Test ustawienia sesji
+  });
+});
+```
+
+**Testy E2E**:
+```typescript
+// src/test/e2e/auth.spec.ts
+test('użytkownik może się zalogować i wylogować', async ({ page }) => {
+  // Symulacja logowania i wylogowania z UI
+});
+
+test('użytkownik widzi odpowiedni komunikat o błędzie przy niepoprawnych danych', async ({ page }) => {
+  // Symulacja błędnego logowania
+});
+```
+
+## 5. Konfiguracja CI/CD dla testów
+
+### 5.1 GitHub Actions workflow
+
+Utwórz plik `.github/workflows/tests.yml`:
+
+```yaml
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm test
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Setup Supabase Local
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
+      - run: npm ci
+      - run: npm run test:integration
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:e2e
+```
+
+## 6. Rozszerzenia do package.json
+
+Dodaj następujące skrypty do pliku `package.json`:
+
+```json
+"scripts": {
+  "test": "vitest run",
+  "test:watch": "vitest",
+  "test:coverage": "vitest run --coverage",
+  "test:integration": "vitest run src/test/integration",
+  "test:e2e": "playwright test",
+  "test:e2e:ui": "playwright test --ui",
+  "test:performance": "lighthouse http://localhost:3000 --output-path=./lighthouse-report.html --view"
+}
+```
+
+## 7. Konkretne strategie mockowania
+
+### 7.1 Mockowanie Supabase
+
+Rozszerz plik `src/test/setup.ts` o dodatkowe mocki:
+
+```typescript
+// Mockowanie odpowiedzi z bazy danych
+export function mockSupabaseWithReports(reports = []) {
+  const mockData = { data: reports, error: null };
+  const mockClient = createMockSupabaseClient();
+  
+  // Nadpisanie metody from().select()
+  mockClient.from.mockImplementation(() => ({
+    select: vi.fn(() => ({
+      eq: vi.fn(() => ({
+        single: vi.fn(() => Promise.resolve(mockData))
+      }))
+    }))
+  }));
+  
+  return mockClient;
+}
+
+// Mockowanie sesji użytkownika
+export function mockAuthenticatedSession(userId = '123') {
+  const mockSession = {
+    data: {
+      session: {
+        user: { id: userId }
+      }
+    },
+    error: null
+  };
+  
+  const mockClient = createMockSupabaseClient();
+  mockClient.auth.getSession.mockResolvedValue(mockSession);
+  
+  return mockClient;
+}
+```
+
+### 7.2 Mockowanie OpenAI API
+
+Utwórz plik `src/test/mocks/openai.ts`:
+
+```typescript
+import { vi } from 'vitest';
+
+export function mockOpenAISuccessResponse(customResponse = {}) {
+  global.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: vi.fn().mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              summary: 'Przykładowe podsumowanie',
+              conclusions: ['Wniosek 1', 'Wniosek 2'],
+              keyData: 'Kluczowe dane: X, Y, Z',
+              ...customResponse
+            })
+          }
+        }
+      ]
+    })
+  });
+}
+
+export function mockOpenAIErrorResponse(status = 500, message = 'Error') {
+  global.fetch = vi.fn().mockResolvedValue({
+    ok: false,
+    status,
+    statusText: message,
+    text: vi.fn().mockResolvedValue('API Error')
+  });
+}
+```
+
+## 8. Testy bezpieczeństwa - szczegółowy plan
+
+### 8.1 Automatyczne skanowanie zależności
+
+Dodaj do CI/CD:
+
+```yaml
+security-scan:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v3
+    - name: Run npm audit
+      run: npm audit --audit-level=high
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'ania-raporty'
+        path: '.'
+        format: 'HTML'
+        out: 'reports'
+```
+
+### 8.2 Testy RLS (Row Level Security) dla Supabase
+
+Utwórz plik `src/test/security/rls.test.ts`:
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+describe('Supabase RLS Tests', () => {
+  let userAClient;
+  let userBClient;
+  
+  beforeAll(async () => {
+    // Utworzenie klientów z różnymi tokenami autoryzacyjnymi
+  });
+  
+  it('użytkownik może odczytać tylko swoje raporty', async () => {
+    // Test dostępu do raportów
+  });
+  
+  it('użytkownik nie może modyfikować raportów innych użytkowników', async () => {
+    // Test modyfikacji raportów
+  });
+});
+```
+
+## 9. Testy wydajnościowe - szczegółowy plan
+
+### 9.1 Lighthouse automatyczne testy
+
+```typescript
+// src/test/performance/lighthouse.test.ts
+import lighthouse from 'lighthouse';
+import chromeLauncher from 'chrome-launcher';
+
+describe('Testy wydajnościowe z Lighthouse', () => {
+  it('strona główna spełnia wymagania wydajnościowe', async () => {
+    // Test wydajności strony głównej
+  });
+  
+  it('strona listy raportów ładuje się szybko', async () => {
+    // Test wydajności listy raportów
+  });
+});
+```
+
+### 9.2 Testy React Server Components
+
+```typescript
+// src/test/performance/rsc.test.ts
+describe('Testy wydajności React Server Components', () => {
+  it('komponent raportu renderuje się efektywnie', async () => {
+    // Test wydajności renderowania komponentu
+  });
+});
+```
+
+## 10. Dokumentacja testowa i artefakty
+
+### 10.1 Szablon dokumentacji testowej
+
+Utwórz plik `docs/test-documentation.md`:
+
+```markdown
+# Dokumentacja Testowa - Ania-Raporty
+
+## Pokrycie testami
+
+| Kategoria | Liczba testów | Pokrycie kodu |
+|-----------|---------------|---------------|
+| Jednostkowe | X | X% |
+| Integracyjne | X | X% |
+| E2E | X | N/A |
+
+## Krytyczne ścieżki testowe
+
+1. Rejestracja i logowanie użytkownika
+2. Generowanie raportu z AI
+3. ...
+
+## Znane problemy i ograniczenia
+
+1. ...
+2. ...
+
+## Raporty z testów
+
+- [Link do raportu z testów jednostkowych](link)
+- [Link do raportu z testów integracyjnych](link)
+- [Link do raportu z testów E2E](link)
+```
+
+### 10.2 Automatyczne raportowanie wyników testów
+
+Dodaj do CI/CD:
+
+```yaml
+test-report:
+  runs-on: ubuntu-latest
+  needs: [unit-tests, integration-tests, e2e-tests]
+  steps:
+    - uses: actions/download-artifact@v3
+    - name: Generate Combined Report
+      run: |
+        npm install -g junit-merge
+        junit-merge -d ./test-results -o combined-results.xml
+    - name: Publish Test Report
+      uses: mikepenz/action-junit-report@v3
+      with:
+        report_paths: 'combined-results.xml'
+```
+
+## 11. Podsumowanie i zalecenia wdrożeniowe
+
+1. **Natychmiastowo wdrażaj**:
+   - Testy jednostkowe dla kluczowych serwisów (report.service.ts)
+   - Testy walidacji danych wejściowych
+   - Testy autoryzacji
+
+2. **Priorytet średni**:
+   - Testy integracyjne dla przepływów użytkownika
+   - Testy komponentów UI
+   - Testy wydajnościowe prostych komponentów
+
+3. **Po stabilizacji kodu**:
+   - Testy E2E
+   - Kompleksowe testy bezpieczeństwa
+   - Testy dostępności
+
+15. Zarządzanie ryzykiem
+Identyfikacja kluczowych ryzyk testowych
+Plan łagodzenia ryzyk
+Procedury eskalacji problemów krytycznych
+Ten plan testów powinien być regularnie aktualizowany w miarę rozwoju aplikacji i pojawienia się nowych funkcjonalności.
