@@ -171,12 +171,21 @@ Jako zalogowany użytkownik, chcę zarządzać informacjami w moim profilu, aby 
 - System zapisuje zmiany po zatwierdzeniu przez użytkownika
 
 ### US-015: Responsywność interfejsu
-Jako użytkownik, chcę korzystać z aplikacji na różnych urządzeniach, aby mieć dostęp do raportów niezależnie od sprzętu.
+Jako zalogowany użytkownik, chcę korzystać z aplikacji na różnych urządzeniach, aby mieć dostęp do raportów niezależnie od sprzętu.
 #### Kryteria akceptacji:
 - Interfejs poprawnie wyświetla się na komputerach stacjonarnych
 - Interfejs poprawnie wyświetla się na tabletach
 - Interfejs poprawnie wyświetla się na telefonach komórkowych
 - Wszystkie funkcje są dostępne niezależnie od urządzenia
+
+### US-016: User bez konta
+Jako niezalogowany użytkownik, chcę być od razu przekierowany na stronę do logowania
+#### Kryteria akceptacji:
+- Użytkownik niezalogowany nie ma dostępu do platformy
+- Użytkownik niezalogowany może się zalogować
+- Użytkownik niezalogowany może przejść do strony rejestracji
+- Użytkownik niezalogowany może przejść do strony aktualizacji hasła
+- Użytkownik niezalogowany może przejść do strony resetu hasła
 
 ## 6. Metryki sukcesu
 
