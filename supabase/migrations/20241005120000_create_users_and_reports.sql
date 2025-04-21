@@ -3,26 +3,18 @@
 -- description: creates the necessary tables and associated constraints, indexes, and row level security (rls) policies.
 -- all sql is written in lowercase.
 
--- create table users
-create table users (
-    id serial primary key,
-    email varchar(255) unique not null,
-    hashed_password varchar(255) not null,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp
-);
 
 -- create table reports
 create table reports (
     id serial primary key,
-    user_id integer not null references users(id) on delete cascade,
-    title varchar(255) not null,
-    original_text text check (length(original_text) <= 10000),
-    summary text check (length(summary) <= 10000),
-    conclusions text check (length(conclusions) <= 10000),
-    key_data text check (length(key_data) <= 10000),
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    original_text TEXT CHECK (LENGTH(original_text) <= 10000),
+    summary TEXT CHECK (LENGTH(summary) <= 10000),
+    conclusions TEXT CHECK (LENGTH(conclusions) <= 10000),
+    key_data TEXT CHECK (LENGTH(key_data) <= 10000),
+    title TEXT CHECK (LENGTH(title) <= 10000),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- create index on reports.user_id to optimize queries filtering by user id
@@ -35,23 +27,23 @@ alter table reports enable row level security;
 -- policy for select: only allow report owner to select their reports
 create policy select_reports_authenticated on reports
     for select to authenticated
-    using (user_id = current_setting('myapp.current_user_id')::integer);
+    using (auth.uid() = user_id);
 
 -- policy for insert: only allow report owner to insert if user_id matches current setting
 create policy insert_reports_authenticated on reports
     for insert to authenticated
-    with check (user_id = current_setting('myapp.current_user_id')::integer);
+    with check (auth.uid() = user_id);
 
 -- policy for update: only allow report owner to update their reports
 create policy update_reports_authenticated on reports
     for update to authenticated
-    using (user_id = current_setting('myapp.current_user_id')::integer)
-    with check (user_id = current_setting('myapp.current_user_id')::integer);
+    using (auth.uid() = user_id)
+    with check (auth.uid() = user_id);
 
 -- policy for delete: only allow report owner to delete their reports
 create policy delete_reports_authenticated on reports
     for delete to authenticated
-    using (user_id = current_setting('myapp.current_user_id')::integer);
+    using (auth.uid() = user_id);
 
 -- create rls policies for anon users on reports table to explicitly deny access
 create policy select_reports_anon on reports

@@ -4,26 +4,19 @@ This document outlines the database schema design for the Raport Generator AI ap
 
 ## 1. Tables
 
-### 1.1. `users`
+### 1.1. `reports`
 - **id**: SERIAL PRIMARY KEY
-- **email**: VARCHAR(255) UNIQUE NOT NULL
-- **hashed_password**: VARCHAR(255) NOT NULL
-- **created_at**: TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-- **updated_at**: TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-
-### 1.2. `reports`
-- **id**: SERIAL PRIMARY KEY
-- **user_id**: INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
+- **user_id**: UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
 - **original_text**: TEXT CHECK (LENGTH(original_text) <= 10000)
 - **summary**: TEXT CHECK (LENGTH(summary) <= 10000)
 - **conclusions**: TEXT CHECK (LENGTH(conclusions) <= 10000)
 - **key_data**: TEXT CHECK (LENGTH(key_data) <= 10000)
-- **created_at**: TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-- **updated_at**: TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+- **created_at**: TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+- **updated_at**: TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 
 ## 2. Relationships
 
-- One-to-Many relationship between `users` and `reports`: Each report is linked to one user via the `user_id` foreign key. Deleting a user cascades to remove associated reports.
+- One-to-Many relationship between `auth.users` and `reports`: Each report is linked to one user via the `user_id` foreign key. Deleting a user cascades to remove associated reports.
 
 ## 3. Indexes
 
@@ -35,18 +28,36 @@ This document outlines the database schema design for the Raport Generator AI ap
 
 ## 4. Row Level Security (RLS)
 
-- Enable RLS on the `reports` table and implement a policy so that only the owner of the report can perform SELECT, UPDATE, and DELETE operations.
+- Enable RLS on the `reports` table and implement a policy so that only the owner of the report can perform SELECT, INSERT, UPDATE, and DELETE operations. Note: We assume the user's ID from Supabase Auth is available via `auth.uid()`.
 
   ```sql
+  -- Enable RLS
   ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
-  CREATE POLICY report_owner_policy ON reports
-      USING (user_id = current_setting('myapp.current_user_id')::integer)
-      WITH CHECK (user_id = current_setting('myapp.current_user_id')::integer);
+  -- Create policy for selecting reports
+  CREATE POLICY "Allow individual read access" ON reports
+    FOR SELECT
+    USING (auth.uid() = user_id);
+
+  -- Create policy for inserting reports
+  CREATE POLICY "Allow individual insert access" ON reports
+    FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+  -- Create policy for updating reports
+  CREATE POLICY "Allow individual update access" ON reports
+    FOR UPDATE
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+  -- Create policy for deleting reports
+  CREATE POLICY "Allow individual delete access" ON reports
+    FOR DELETE
+    USING (auth.uid() = user_id);
   ```
 
 ## 5. Additional Notes
 
 - All text fields in the `reports` table have a CHECK constraint limiting their length to 10,000 characters (approximately two A4 pages).
-- Timestamp columns (`created_at`, `updated_at`) default to CURRENT_TIMESTAMP for audit purposes.
-- The design adheres to 3NF and is optimized for PostgreSQL on Supabase, with future scalability considerations (e.g., table partitioning) in mind. 
+- Timestamp columns (`created_at`, `updated_at`) use `TIMESTAMP WITH TIME ZONE` and default to `now()` for audit purposes, which is standard practice in Supabase.
+- The design adheres to 3NF and is optimized for PostgreSQL on Supabase, leveraging Supabase Auth for user management. 
