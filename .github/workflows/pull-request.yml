@@ -104,6 +104,8 @@ jobs:
     name: PR Status Comment
     needs: [lint, unit-test, e2e-test]
     if: always()
+    permissions:
+      issues: write
     runs-on: ubuntu-latest
     steps:
       - name: Create or update PR comment
