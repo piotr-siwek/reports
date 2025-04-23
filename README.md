@@ -7,6 +7,7 @@ AI-powered application for automatic generation of reports from text input.
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
 - [Available Scripts](#available-scripts)
+- [Testing](#testing)
 - [Project Scope](#project-scope)
 - [Project Status](#project-status)
 - [License](#license)
@@ -42,6 +43,11 @@ Manual report creation from source texts is time-consuming, error-prone, ineffic
 ### AI Integration
 - Openrouter.ai for AI model communication
 - Access to various models (OpenAI, Anthropic, Google, etc.)
+
+### Testing
+- Vitest for unit and integration tests
+- Playwright for end-to-end (E2E) tests
+- Lighthouse for performance testing
 
 ### CI/CD & Hosting
 - GitHub Actions for CI/CD pipelines
@@ -83,6 +89,41 @@ Manual report creation from source texts is time-consuming, error-prone, ineffic
 - `npm run build` - Build the application for production
 - `npm run start` - Start the production server
 - `npm run lint` - Run ESLint to check code quality
+- `npm test` - Run unit tests with Vitest
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Generate test coverage report
+- `npm run test:e2e` - Run E2E tests with Playwright
+
+## Testing
+
+### Unit and Integration Tests
+We use Vitest as our testing framework for unit and integration tests. Tests are co-located with the source files they're testing with the `.test.ts` or `.test.tsx` extension.
+
+To run unit tests:
+```bash
+npm test
+```
+
+### E2E Tests
+We use Playwright for end-to-end testing, which allows us to test the application in real browsers (Chromium, Firefox, and WebKit).
+
+To run E2E tests:
+```bash
+npm run test:e2e
+```
+
+To run E2E tests with UI:
+```bash
+npm run test:e2e:ui
+```
+
+### Performance Tests
+We use Lighthouse for performance testing of our application.
+
+To run performance tests:
+```bash
+npm run test:performance
+```
 
 ## Project Scope
 

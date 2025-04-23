@@ -9,12 +9,18 @@ Backend - Supabase jako kompleksowe rozwiązanie backendowe:
 - Zapewnia bazę danych PostgreSQL
 - Zapewnia SDK w wielu językach, które posłużą jako Backend-as-a-Service
 - Jest rozwiązaniem open source, które można hostować lokalnie lub na własnym serwerze
-- Posiada wbudowaną autentykację użytkowników
+- Posiada wbudowaną autentykację użytkowników, z której skorzystamy
 
 AI - Komunikacja z modelami przez usługę Openrouter.ai:
 - Dostęp do szerokiej gamy modeli (OpenAI, Anthropic, Google i wiele innych), które pozwolą nam znaleźć rozwiązanie zapewniające wysoką efektywność i niskie koszta
 - Pozwala na ustawianie limitów finansowych na klucze API
 
+Testy - Narzędzia testowe zapewniające jakość aplikacji:
+- Vitest do testów jednostkowych i integracyjnych, zapewniający szybkie wykonanie i łatwą konfigurację
+- Playwright do testów E2E, umożliwiający testowanie w rzeczywistych przeglądarkach (Chromium, Firefox, WebKit)
+- Lighthouse do testów wydajnościowych
+- Mock Service Worker (MSW) do mockowania API podczas testów
+
 CI/CD i Hosting:
-- Github Actions do tworzenia pipeline’ów CI/CD
+- Github Actions do tworzenia pipeline'ów CI/CD
 - DigitalOcean do hostowania aplikacji za pośrednictwem obrazu docker

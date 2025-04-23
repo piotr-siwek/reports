@@ -42,8 +42,9 @@ export type Database = {
           key_data: string | null
           original_text: string | null
           summary: string | null
+          title: string | null
           updated_at: string
-          user_id: number
+          user_id: string
         }
         Insert: {
           conclusions?: string | null
@@ -52,8 +53,9 @@ export type Database = {
           key_data?: string | null
           original_text?: string | null
           summary?: string | null
+          title?: string | null
           updated_at?: string
-          user_id: number
+          user_id: string
         }
         Update: {
           conclusions?: string | null
@@ -62,40 +64,9 @@ export type Database = {
           key_data?: string | null
           original_text?: string | null
           summary?: string | null
+          title?: string | null
           updated_at?: string
-          user_id?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reports_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      users: {
-        Row: {
-          created_at: string
-          email: string
-          hashed_password: string
-          id: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          hashed_password: string
-          id?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          hashed_password?: string
-          id?: number
-          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

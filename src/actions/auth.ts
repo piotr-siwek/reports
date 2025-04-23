@@ -251,19 +251,17 @@ export async function requestPasswordReset(
   }
 
   // 2. Proceed with Supabase password reset request
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createServerClient(
     supabaseUrl,
     supabaseAnonKey,
     {
       cookies: {
         getAll() {
-          // @ts-expect-error Assuming cookies() returns store synchronously despite lint error
           return cookieStore.getAll();
         },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           try {
-            // @ts-expect-error Assuming cookies() returns store synchronously despite lint error
             cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
           } catch {
             // Ignore errors
@@ -276,7 +274,7 @@ export async function requestPasswordReset(
   // Define the redirect URL (where the user sets the new password)
   // Ensure this matches the page created in the previous step (UpdatePasswordPage)
   const redirectURL = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/update-password`;
-
+  console.log('redirectURL', redirectURL);
   // Call Supabase resetPasswordForEmail
   const { error } = await supabase.auth.resetPasswordForEmail(
     validationResult.data.email,
@@ -284,7 +282,7 @@ export async function requestPasswordReset(
       redirectTo: redirectURL,
     }
   );
-
+  console.log('error', error);
   if (error) {
     console.error('Supabase resetPasswordForEmail error:', error);
     // For security, do not reveal specific errors like "User not found"

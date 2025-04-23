@@ -23,6 +23,7 @@ describe('ReportService', () => {
     mockSupabase = createMockSupabaseClient();
     
     // Mock the createClient function
+    // @ts-expect-error - W testach mockujemy tylko niezbędne metody, nie pełen interfejs
     vi.mocked(supabaseServer.createClient).mockResolvedValue(mockSupabase);
   });
 
@@ -44,14 +45,13 @@ describe('ReportService', () => {
       };
 
       // Configure mock to return the report
-      mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: null });
       mockSupabase.from().select().eq().single.mockResolvedValueOnce({
         data: mockReportData,
         error: null
       });
       
       // Act
-      const result = await reportService.getReportDetails(mockReportId, mockUserId);
+      const result = await reportService.getReportDetails(mockReportId);
       
       // Assert
       expect(result).toEqual({
@@ -67,11 +67,6 @@ describe('ReportService', () => {
       } as ReportDto);
       
       // Verify interactions
-      expect(mockSupabase.rpc).toHaveBeenCalledWith('set_config', {
-        parameter: 'myapp.current_user_id',
-        value: mockUserId.toString()
-      });
-      
       expect(mockSupabase.from).toHaveBeenCalledWith('reports');
       expect(mockSupabase.from().select).toHaveBeenCalledWith('*');
       expect(mockSupabase.from().select().eq).toHaveBeenCalledWith('id', mockReportId);
@@ -80,58 +75,50 @@ describe('ReportService', () => {
     it('should throw NotFoundError when report does not exist', async () => {
       // Arrange
       const mockReportId = 999;
-      const mockUserId = 2;
       
       // Configure mock to return not found error
-      mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: null });
       mockSupabase.from().select().eq().single.mockResolvedValueOnce({
         data: null,
         error: { code: 'PGRST116', message: 'No rows returned' }
       });
       
       // Act & Assert
-      await expect(reportService.getReportDetails(mockReportId, mockUserId))
+      await expect(reportService.getReportDetails(mockReportId))
         .rejects
         .toThrow(NotFoundError);
-      
-      // Verify interactions
-      expect(mockSupabase.rpc).toHaveBeenCalledWith('set_config', {
-        parameter: 'myapp.current_user_id',
-        value: mockUserId.toString()
-      });
     });
 
     it('should throw NotFoundError when data is null but no error', async () => {
       // Arrange
       const mockReportId = 999;
-      const mockUserId = 2;
       
       // Configure mock to return not found error
-      mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: null });
       mockSupabase.from().select().eq().single.mockResolvedValueOnce({
         data: null,
         error: null
       });
       
       // Act & Assert
-      await expect(reportService.getReportDetails(mockReportId, mockUserId))
+      await expect(reportService.getReportDetails(mockReportId))
         .rejects
         .toThrow(NotFoundError);
     });
 
-    it('should throw error when RPC call fails', async () => {
+    it('should throw error when query fails with non-PGRST116 error', async () => {
       // Arrange
       const mockReportId = 1;
-      const mockUserId = 2;
-      const rpcError = new Error('RPC failed');
       
-      // Configure mock to return RPC error
-      mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: rpcError });
+      // Konfigurujemy mock do zwrócenia błędu, który nie jest PGRST116
+      mockSupabase.from().select().eq().single.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Query failed', code: 'OTHER_ERROR' }
+      });
       
       // Act & Assert
-      await expect(reportService.getReportDetails(mockReportId, mockUserId))
+      // Oczekujemy, że błąd będzie przekazany dalej z zachowaniem jego właściwości
+      await expect(reportService.getReportDetails(mockReportId))
         .rejects
-        .toBe(rpcError);
+        .toHaveProperty('message', 'Query failed');
     });
   });
 }); 
