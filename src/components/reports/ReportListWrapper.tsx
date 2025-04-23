@@ -1,50 +1,14 @@
 import React from 'react';
-<<<<<<< HEAD
-import ReportList from './ReportList';
-import type { ListReportsResponseDto } from '@/types';
-
-// Dummy server action simulating API call to fetch reports
-async function listReports({ page, limit, filter, sort }: { page: number; limit: number; filter: string; sort: string; }): Promise<ListReportsResponseDto> {
-  // In a real implementation, replace with actual API call
-  return {
-    reports: [
-      {
-        id: 1,
-        title: 'Test Report',
-        summary: 'This is a summary of the test report.',
-        createdAt: new Date().toISOString()
-      }
-    ],
-    pagination: {
-      page,
-      limit,
-      total: 1
-    }
-  };
-}
-=======
 import { listReports } from '@/actions/reportActions';
 import ReportList from './ReportList'; // Assuming ReportList is in the same directory
 import ReportsPagination from './ReportsPagination'; // Import the actual component
 // import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert" // Replaced with basic div for now
 // import { Terminal } from 'lucide-react'; // Icon not needed without Alert
->>>>>>> remove-idea-file
 
 interface ReportListWrapperProps {
   page: number;
   limit: number;
   filter?: string;
-<<<<<<< HEAD
-  sort?: string;
-}
-
-export default async function ReportListWrapper({ page, limit, filter = '', sort = 'createdAt.desc' }: ReportListWrapperProps) {
-  const data = await listReports({ page, limit, filter, sort });
-  if (data.reports.length === 0) {
-    return <div>Brak raportów</div>;
-  }
-  return <ReportList reports={data.reports} />;
-=======
   sort?: string; // Optional sort parameter
 }
 
@@ -99,5 +63,4 @@ export default async function ReportListWrapper({
       )}
     </div>
   );
->>>>>>> remove-idea-file
 } 

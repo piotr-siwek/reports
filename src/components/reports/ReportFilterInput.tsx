@@ -1,42 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
-import { Input } from '@/components/ui/input';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-
-interface ReportFilterInputProps {
-  initialFilterValue?: string;
-}
-
-export default function ReportFilterInput({ initialFilterValue = '' }: ReportFilterInputProps) {
-  const [filter, setFilter] = useState(initialFilterValue);
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (filter) {
-        params.set('filter', filter);
-      } else {
-        params.delete('filter');
-      }
-      router.push(`${pathname}?${params.toString()}`);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [filter, router, pathname, searchParams]);
-
-  return (
-    <Input
-      type="text"
-      value={filter}
-      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.target.value)}
-      placeholder="Filtruj raporty..."
-      className="input input-bordered w-full"
-=======
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';
 import { Input } from '@/components/ui/input';
@@ -91,7 +55,6 @@ export default function ReportFilterInput({
       value={inputValue}
       onChange={handleChange}
       className="max-w-sm" // Limit width for better layout
->>>>>>> remove-idea-file
     />
   );
 } 

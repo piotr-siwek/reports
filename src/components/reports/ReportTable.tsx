@@ -1,7 +1,4 @@
 import React from 'react';
-<<<<<<< HEAD
-import type { ReportSummaryDto } from '@/types';
-=======
 import {
   Table,
   TableBody,
@@ -10,7 +7,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ReportSummaryDto } from '@/types';
->>>>>>> remove-idea-file
 import ReportTableRow from './ReportTableRow';
 
 interface ReportTableProps {
@@ -19,22 +15,6 @@ interface ReportTableProps {
 
 export default function ReportTable({ reports }: ReportTableProps) {
   return (
-<<<<<<< HEAD
-    <table className="min-w-full border-collapse">
-      <thead>
-        <tr>
-          <th className="border px-4 py-2 text-left">Tytuł</th>
-          <th className="border px-4 py-2 text-left">Data utworzenia</th>
-          <th className="border px-4 py-2 text-left">Akcje</th>
-        </tr>
-      </thead>
-      <tbody>
-        {reports.map(report => (
-          <ReportTableRow key={report.id} report={report} />
-        ))}
-      </tbody>
-    </table>
-=======
     <Table>
       <TableHeader>
         <TableRow>
@@ -51,6 +31,5 @@ export default function ReportTable({ reports }: ReportTableProps) {
       {/* Optional: Add TableCaption if needed */}
       {/* <TableCaption>Lista Twoich raportów.</TableCaption> */}
     </Table>
->>>>>>> remove-idea-file
   );
 } 
