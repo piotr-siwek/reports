@@ -6,6 +6,8 @@ on:
   pull_request_target:
     branches: [main]
 
+# Domyślne uprawnienia dla całego workflow
+# (można je usunąć, jeśli ustalisz je tylko na poziomie jobów)
 permissions:
   contents: read
   issues: write
@@ -15,6 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # 1) Linting na pull_request (read-only token)
   lint:
     name: Lint
     if: ${{ github.event_name == 'pull_request' }}
@@ -31,16 +34,12 @@ jobs:
       - name: Run linting
         run: npm run lint
 
+  # 2) Unit Tests na pull_request (read-only token)
   unit-test:
     name: Unit Tests
     if: ${{ github.event_name == 'pull_request' }}
     needs: lint
     runs-on: ubuntu-latest
-    env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -59,6 +58,7 @@ jobs:
           path: ./coverage
           retention-days: 7
 
+  # 3) E2E Tests na pull_request (read-only token)
   e2e-test:
     name: E2E Tests
     if: ${{ github.event_name == 'pull_request' }}
@@ -93,6 +93,7 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  # 4) CodeQL Scanning (może pozostać na pull_request lub na push)
   code-scanning:
     name: CodeQL Scanning
     runs-on: ubuntu-latest
@@ -108,11 +109,16 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
 
+  # 5) Komentowanie statusu PR – wyłącznie pull_request_target
   status-comment:
     name: PR Status Comment
-    needs: [lint, unit-test, e2e-test]
-    if: ${{ (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') && always() }}
+    if: ${{ github.event_name == 'pull_request_target' }}
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read # potrzebne do checkout
+      issues: write # potrzebne do komentowania :contentReference[oaicite:3]{index=3}
+
     steps:
       - uses: actions/checkout@v4
       - name: Create or update PR comment
