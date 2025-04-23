@@ -6,7 +6,7 @@ import { ReportPreviewDto } from '@/types'; // Using @ alias assuming it maps to
 // Define the structure for the content being edited
 export interface EditorContent {
   summary: string;
-  conclusions: string;
+  conclusions: string | string[];
   keyData: string;
 }
 
@@ -19,7 +19,7 @@ interface RichTextEditorProps {
 // Basic placeholder Rich Text Editor using textareas
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChange, readOnly = false }) => {
   const [summary, setSummary] = useState('');
-  const [conclusions, setConclusions] = useState('');
+  const [conclusions, setConclusions] = useState<string | string[]>('');
   const [keyData, setKeyData] = useState('');
 
   // Update state when initialContent changes (e.g., after generation)

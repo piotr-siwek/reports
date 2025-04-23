@@ -1,3 +1,5 @@
+import type { Tables, TablesInsert, TablesUpdate } from './db/database.types';
+
 // User DTOs & Command Models
 
 // Command for registering a new user
@@ -92,31 +94,30 @@ export interface GenerateReportCommand {
 export interface ReportPreviewDto {
   originalText: string;
   summary: string;
-  conclusions: string;
+  conclusions: string | string[];
   keyData: string;
 }
 
 // Command for creating/saving a report
 export interface CreateReportCommand {
-  title: string; // API requirement, not part of the original DB model
-  originalText: string;
-  summary: string;
-  conclusions: string;
-  keyData: string;
+  title: NonNullable<TablesInsert<'reports'>['title']>;
+  originalText: NonNullable<TablesInsert<'reports'>['original_text']>;
+  summary: NonNullable<TablesInsert<'reports'>['summary']>;
+  conclusions: NonNullable<TablesInsert<'reports'>['conclusions']> | string[];
+  keyData: NonNullable<TablesInsert<'reports'>['key_data']>;
 }
 
-// DTO representing a full report. This extends the database 'reports' model (with transformation from snake_case to camelCase).
-// Note: The 'title' field is added in the API layer.
+// DTO representing a full report (camelCase), derived from DB row
 export interface ReportDto {
-  id: number;
-  userId: number;
-  title: string;
-  originalText: string;
-  summary: string;
-  conclusions: string;
-  keyData: string;
-  createdAt: string;
-  updatedAt: string;
+  id: Tables<'reports'>['id'];
+  userId: Tables<'reports'>['user_id'];
+  title: Tables<'reports'>['title'];
+  originalText: Tables<'reports'>['original_text'];
+  summary: Tables<'reports'>['summary'];
+  conclusions: Tables<'reports'>['conclusions'] | string[];
+  keyData: Tables<'reports'>['key_data'];
+  createdAt: Tables<'reports'>['created_at'];
+  updatedAt: Tables<'reports'>['updated_at'];
 }
 
 // Response DTO for creating a report
@@ -126,12 +127,7 @@ export interface CreateReportResponseDto {
 }
 
 // DTO representing a summary of a report (for listing reports)
-export interface ReportSummaryDto {
-  id: number;
-  title: string;
-  summary: string;
-  createdAt: string;
-}
+export type ReportSummaryDto = Pick<ReportDto, 'id' | 'title' | 'summary' | 'createdAt'>;
 
 // DTO for pagination information in list responses
 export interface PaginationDto {
@@ -152,11 +148,11 @@ export type GetReportDetailsResponseDto = ReportDto;
 
 // Command for updating a report. All fields are optional as only modified fields need to be provided.
 export interface UpdateReportCommand {
-  title?: string;
-  originalText?: string;
-  summary?: string;
-  conclusions?: string;
-  keyData?: string;
+  title?: TablesUpdate<'reports'>['title'];
+  originalText?: TablesUpdate<'reports'>['original_text'];
+  summary?: TablesUpdate<'reports'>['summary'];
+  conclusions?: TablesUpdate<'reports'>['conclusions'];
+  keyData?: TablesUpdate<'reports'>['key_data'];
 }
 
 // Response DTO for updating a report

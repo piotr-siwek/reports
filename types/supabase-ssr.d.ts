@@ -1,8 +1,8 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient as SupabaseClientOriginal } from '@supabase/supabase-js';
+import type { Database } from '../src/db/database.types';
 
 declare module '@supabase/supabase-js' {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface SupabaseClient<Database = unknown> {
+  interface SupabaseClient<DB = Database> extends SupabaseClientOriginal<DB> {
     rpc<Params extends Record<string, unknown>, Result>(
       fn: string,
       params?: Params
@@ -11,14 +11,14 @@ declare module '@supabase/supabase-js' {
 }
 
 declare module '@supabase/ssr' {
-  export function createBrowserClient<Database = unknown>(
+  export function createBrowserClient<DB = Database>(
     supabaseUrl: string, 
     supabaseAnonKey: string
-  ): SupabaseClient<Database>;
+  ): SupabaseClient<DB>;
   
-  export function createServerClient<Database = unknown>(
+  export function createServerClient<DB = Database>(
     supabaseUrl: string, 
     supabaseAnonKey: string, 
     options: { cookies: { getAll: () => unknown; setAll: (cookiesToSet: unknown[]) => void } }
-  ): SupabaseClient<Database>;
+  ): SupabaseClient<DB>;
 } 

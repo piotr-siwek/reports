@@ -14,7 +14,7 @@ Font.register({
 interface ReportDocumentProps {
   title: string;
   summary: string;
-  conclusions: string[];
+  conclusions: string | string[];
   keyData: string;
 }
 
@@ -83,9 +83,15 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({
 
         <View style={styles.section}>
           <Text style={styles.header}>Wnioski:</Text>
-          {conclusions.map((item, idx) => (
-              <Text key={idx} style={styles.listItem}>• {item}</Text>
-          ))}
+          {
+            typeof conclusions === 'string' ? (
+              <Text style={styles.text}>{conclusions}</Text>
+            ) : (
+              conclusions.map((item, idx) => (
+                <Text key={idx} style={styles.listItem}>• {item}</Text>
+              ))
+            )
+          }
         </View>
 
         <View style={styles.section}>

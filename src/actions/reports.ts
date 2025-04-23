@@ -51,7 +51,7 @@ You are an analytical assistant. Your task is to analyze the text below and retu
 In particular, do NOT omit any information related to:
   - dates (day, month, year, or time ranges),
   - amounts (including currency and units),
-  - tasks and actions (“what needs to be done”),
+  - tasks and actions ("what needs to be done"),
   - decisions to be made,
   - deadlines,
   - people, departments, or roles responsible for decisions,
@@ -116,10 +116,13 @@ No additional text or comments are allowed—only the JSON.`;
       return { success: false, error: "AI zwróciło niekompletne lub nieprawidłowe dane." };
     }
 
+    // Normalize the conclusions field to an array
+    const rawConclusions = validationResult.data.conclusions;
+    const conclusionsArray = Array.isArray(rawConclusions) ? rawConclusions : [rawConclusions];
     const previewData: ReportPreviewDto = {
       originalText: command.originalText,
       summary: validationResult.data.summary,
-      conclusions: validationResult.data.conclusions,
+      conclusions: conclusionsArray,
       keyData: validationResult.data.keyData,
     };
 
@@ -249,7 +252,7 @@ export async function saveReport(
   await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
    const mockSavedReport: ReportDto = {
       id: Math.floor(Math.random() * 1000),
-      userId: 1, // Placeholder numeric user ID
+      userId: '1', // Placeholder string user ID
       title: command.title,
       originalText: command.originalText,
       summary: command.summary,

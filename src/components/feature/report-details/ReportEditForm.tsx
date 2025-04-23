@@ -22,7 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 const reportEditSchema = z.object({
   title: z.string().min(1, "Tytuł jest wymagany.").max(255, "Tytuł jest za długi."),
   summary: z.string().max(10000, "Streszczenie jest za długie (max 10000 znaków).").optional(), // Optional in form state, handled by editor
-  conclusions: z.string().max(10000, "Wnioski są za długie (max 10000 znaków).").optional(),
+  conclusions: z.string().max(10000, "Wnioski są za długie (max 10000 znaków).").or(z.array(z.string())).optional(),
   keyData: z.string().max(10000, "Kluczowe dane są za długie (max 10000 znaków).").optional(),
 });
 

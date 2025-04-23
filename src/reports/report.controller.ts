@@ -36,7 +36,7 @@ export async function GET(
     }
 
     // Get report details
-    const reportDetails = await reportService.getReportDetails(reportId, parseInt(userId));
+    const reportDetails = await reportService.getReportDetails(reportId);
 
     // Return success response
     return NextResponse.json(reportDetails);
