@@ -112,9 +112,7 @@ jobs:
   # 5) Komentowanie statusu PR – wyłącznie pull_request_target
   status-comment:
     name: PR Status Comment
-    if: ${{ github.event_name == 'pull_request_target' }}
     runs-on: ubuntu-latest
-
     permissions:
       contents: read # potrzebne do checkout
       issues: write # potrzebne do komentowania :contentReference[oaicite:3]{index=3}
