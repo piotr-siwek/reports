@@ -36,13 +36,13 @@ async function getUserId(): Promise<string> {
 
 
 interface ReportDetailsPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function ReportDetailsPage({ params }: ReportDetailsPageProps) {
-  const reportId = parseInt(params.id, 10);
+  const reportId = parseInt((await params).id, 10);
 
   // Validate ID
   if (isNaN(reportId)) {
