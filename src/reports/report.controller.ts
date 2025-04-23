@@ -14,11 +14,11 @@ const reportService = new ReportService();
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<GetReportDetailsResponseDto | ErrorResponse>> {
   try {
     // Validate the ID parameter
-    const reportId = parseInt(params.id);
+    const reportId = parseInt((await params).id);
     if (isNaN(reportId)) {
       return NextResponse.json(
         { statusCode: 400, message: 'Invalid report ID' },
