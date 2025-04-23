@@ -3,6 +3,8 @@ name: Pull Request Workflow
 on:
   pull_request:
     branches: [main]
+  pull_request_target:
+    branches: [main]
 
 permissions:
   contents: read
@@ -15,6 +17,7 @@ concurrency:
 jobs:
   lint:
     name: Lint
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +33,7 @@ jobs:
 
   unit-test:
     name: Unit Tests
+    if: ${{ github.event_name == 'pull_request' }}
     needs: lint
     runs-on: ubuntu-latest
     env:
@@ -57,6 +61,7 @@ jobs:
 
   e2e-test:
     name: E2E Tests
+    if: ${{ github.event_name == 'pull_request' }}
     needs: [lint, unit-test]
     runs-on: ubuntu-latest
     environment: test
@@ -106,7 +111,7 @@ jobs:
   status-comment:
     name: PR Status Comment
     needs: [lint, unit-test, e2e-test]
-    if: ${{ always() }}
+    if: ${{ github.event_name == 'pull_request_target' && always() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
