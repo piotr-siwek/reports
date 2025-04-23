@@ -3,15 +3,24 @@ name: Pull Request Workflow
 on:
   pull_request:
     branches: [main]
+  pull_request_target:
+    branches: [main]
 
-# Ensure only one run per PR/ref, cancel in-progress
+# Domyślne uprawnienia dla całego workflow
+# (można je usunąć, jeśli ustalisz je tylko na poziomie jobów)
+permissions:
+  contents: read
+  issues: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  # 1) Linting na pull_request (read-only token)
   lint:
     name: Lint
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,15 +34,12 @@ jobs:
       - name: Run linting
         run: npm run lint
 
+  # 2) Unit Tests na pull_request (read-only token)
   unit-test:
     name: Unit Tests
+    if: ${{ github.event_name == 'pull_request' }}
     needs: lint
     runs-on: ubuntu-latest
-    env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -52,8 +58,10 @@ jobs:
           path: ./coverage
           retention-days: 7
 
+  # 3) E2E Tests na pull_request (read-only token)
   e2e-test:
     name: E2E Tests
+    if: ${{ github.event_name == 'pull_request' }}
     needs: [lint, unit-test]
     runs-on: ubuntu-latest
     environment: test
@@ -62,6 +70,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+      E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
       CI: true
     steps:
       - uses: actions/checkout@v4
@@ -75,7 +85,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: npm run test:e2e -- --update-snapshots
       - name: Upload E2E test results
         uses: actions/upload-artifact@v4
         with:
@@ -83,6 +93,7 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  # 4) CodeQL Scanning (może pozostać na pull_request lub na push)
   code-scanning:
     name: CodeQL Scanning
     runs-on: ubuntu-latest
@@ -97,26 +108,3 @@ jobs:
         run: npm ci
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
-
-  status-comment:
-    name: PR Status Comment
-    needs: [lint, unit-test, e2e-test]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create or update PR comment
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            ## PR Checks ${{ (needs.lint.result == 'success' && needs.unit-test.result == 'success' && needs.e2e-test.result == 'success') && '✅' || '❌' }}
-
-            **Status**: ${{ (needs.lint.result == 'success' && needs.unit-test.result == 'success' && needs.e2e-test.result == 'success') && 'All checks passed!' || 'Some checks failed.' }}
-
-            ### Results:
-            - **Lint**: ${{ needs.lint.result }}
-            - **Unit Tests**: ${{ needs.unit-test.result }}
-            - **E2E Tests**: ${{ needs.e2e-test.result }}
-
-            [View workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
