@@ -5,7 +5,7 @@ import { ReportDto } from '@/types'; // Assuming types are in src/types.ts
 // --- Placeholder ---
 // Replace with actual service import and implementation
 const reportService = {
-  async getReportDetails(id: number, userId: number): Promise<ReportDto | null> {
+  async getReportDetails(id: number, userId: string): Promise<ReportDto | null> {
     console.log(`Fetching report ${id} for user ${userId}...`);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -28,9 +28,9 @@ const reportService = {
 
 // --- Placeholder ---
 // Replace with actual function to get authenticated user ID
-async function getUserId(): Promise<number> {
+async function getUserId(): Promise<string> {
   // Simulate getting user ID (e.g., from session)
-  return 1;
+  return '1';
 }
 // --- End Placeholder ---
 

@@ -12,16 +12,16 @@ import { Tables } from '@/db/database.types';
 
 // --- Placeholder: Get User ID ---
 // Replace with actual function to get authenticated user ID server-side
-async function getUserIdServer(): Promise<number> {
+async function getUserIdServer(): Promise<string> {
   // Simulate getting user ID (e.g., from session/auth context)
-  return 1;
+  return '1';
 }
 // --- End Placeholder ---
 
 // --- Placeholder: Report Service ---
 // Replace with actual service import and implementation
 const reportService = {
-  async updateReport(id: number, userId: number, data: UpdateReportCommand): Promise<ReportDto> {
+  async updateReport(id: number, userId: string, data: UpdateReportCommand): Promise<ReportDto> {
     console.log(`Updating report ${id} for user ${userId} with SANITIZED data:`, data);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -40,7 +40,7 @@ const reportService = {
       updatedAt: new Date().toISOString(),
     };
   },
-  async deleteReport(id: number, userId: number): Promise<void> {
+  async deleteReport(id: number, userId: string): Promise<void> {
     console.log(`Deleting report ${id} for user ${userId}...`);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));

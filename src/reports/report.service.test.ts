@@ -23,7 +23,6 @@ describe('ReportService', () => {
     mockSupabase = createMockSupabaseClient();
     
     // Mock the createClient function
-    // @ts-expect-error - W testach mockujemy tylko niezbędne metody, nie pełen interfejs
     vi.mocked(supabaseServer.createClient).mockResolvedValue(mockSupabase);
   });
 
@@ -31,7 +30,7 @@ describe('ReportService', () => {
     it('should successfully return a report when it exists and belongs to the user', async () => {
       // Arrange
       const mockReportId = 1;
-      const mockUserId = 2;
+      const mockUserId = '2';
       const mockReportData = {
         id: mockReportId,
         user_id: mockUserId,
