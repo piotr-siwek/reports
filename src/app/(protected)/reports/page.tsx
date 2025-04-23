@@ -29,7 +29,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     <div className="container mx-auto px-4 py-8"> {/* Basic container styling */}
       {/* Header Section */}
       <header className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Twoje Raporty</h1>
+        <h1 className="text-3xl font-bold">Twoje Raporty!</h1>
         <Link href="/reports/generate" passHref>
           <Button>Generuj Nowy Raport</Button>
         </Link>
