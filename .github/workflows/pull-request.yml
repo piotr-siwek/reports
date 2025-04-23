@@ -111,7 +111,7 @@ jobs:
   status-comment:
     name: PR Status Comment
     needs: [lint, unit-test, e2e-test]
-    if: ${{ github.event_name == 'pull_request_target' && always() }}
+    if: ${{ (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') && always() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
