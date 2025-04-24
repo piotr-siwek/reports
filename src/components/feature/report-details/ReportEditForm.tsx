@@ -5,18 +5,64 @@ import { useForm, ControllerRenderProps } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useEffect, useState, useTransition } from 'react';
-import { useFormState } from 'react-dom'; // Import useFormState
-import { toast } from "sonner"; // Import toast from sonner
+import { useFormState } from 'react-dom';
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"; // Import Form components
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import ReportMetadata from './ReportMetadata';
 import ReportSectionEditor from './ReportSectionEditor';
 import DeleteConfirmationDialog from './DeleteConfirmationDialog';
-import { updateReportAction, deleteReportAction, UpdateReportActionResult } from '@/actions/reportActions'; // Import actions
-// import { useToast } from "@/components/ui/use-toast"; // Remove old useToast import
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"; // Added Card components
+import { updateReportAction, deleteReportAction, UpdateReportActionResult } from '@/actions/reportActions';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+
+// Format text for display
+function formatForDisplay(text: string | string[] | null | undefined): string {
+  if (!text) return '';
+  
+  if (Array.isArray(text)) {
+    return text.map(item => {
+      const trimmed = item.trim();
+      return trimmed.startsWith('-') ? trimmed : `- ${trimmed}`;
+    }).join('\n');
+  }
+  
+  // If text is a string, check if it's comma-separated
+  if (typeof text === 'string' && text.includes(',')) {
+    const items = text.split(',').map(item => item.trim()).filter(Boolean);
+    return items.map(item => item.startsWith('-') ? item : `- ${item}`).join('\n');
+  }
+  
+  // If it's a single string without commas, just return it with a dash if needed
+  if (typeof text === 'string' && text.trim()) {
+    const trimmed = text.trim();
+    return trimmed.startsWith('-') ? trimmed : `- ${trimmed}`;
+  }
+  
+  return '';
+}
+
+// Format the content back to array when submitting
+function parseForSubmission(text: string | string[] | undefined): string[] {
+  if (!text) return [];
+  
+  if (Array.isArray(text)) {
+    return text.filter(Boolean);
+  }
+  
+  if (!text.trim()) return [];
+  
+  return text
+    .split('\n')
+    .map(line => {
+      const trimmed = line.trim();
+      // Remove dash prefix if present
+      return trimmed.startsWith('-') ? trimmed.substring(1).trim() : trimmed;
+    })
+    .filter(Boolean);
+}
 
 // Zod Schema defined in the plan
 const reportEditSchema = z.object({
@@ -39,10 +85,10 @@ const initialActionState: UpdateReportActionResult = {
   errors: undefined,
 };
 
-export default function ReportEditForm({ initialData }: ReportEditFormProps) {
+const ReportEditForm = ({ initialData }: ReportEditFormProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, startDeleteTransition] = useTransition(); // Use transition for delete loading state
-  // const { toast } = useToast(); // Remove old hook call
+  const router = useRouter();
 
   // useFormState for the update action
   const [updateState, formAction] = useFormState(
@@ -51,13 +97,17 @@ export default function ReportEditForm({ initialData }: ReportEditFormProps) {
   );
   const [isPendingUpdate, startUpdateTransition] = useTransition();
 
+  // Format the data for the form
+  const formattedConclusions = formatForDisplay(initialData.conclusions);
+  const formattedKeyData = formatForDisplay(initialData.keyData);
+
   const form = useForm<ReportEditFormViewModel>({
     resolver: zodResolver(reportEditSchema),
     defaultValues: {
       title: initialData.title || '',
       summary: initialData.summary || '',
-      conclusions: initialData.conclusions || '',
-      keyData: initialData.keyData || '',
+      conclusions: formattedConclusions,
+      keyData: formattedKeyData,
     },
     mode: 'onChange', // Validate on change for better UX
   });
@@ -71,6 +121,7 @@ export default function ReportEditForm({ initialData }: ReportEditFormProps) {
         // Use sonner toast.success
         toast.success("Sukces", { description: updateState.message });
         form.reset(form.getValues()); // Reset dirty state after successful save
+        router.refresh();
       } else {
         // Use sonner toast.error
         toast.error("Błąd zapisu", {
@@ -85,20 +136,30 @@ export default function ReportEditForm({ initialData }: ReportEditFormProps) {
         });
       }
     }
-  }, [updateState, setError, form]);
+  }, [updateState, setError, form, router]);
 
   // Wrapper for form submission to use startTransition
   const handleFormSubmit = (data: ReportEditFormViewModel) => {
-      // Create FormData from the submitted data
-      const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) { // Append only defined values
-              formData.append(key, value as string);
-          }
-      });
-      startUpdateTransition(() => {
-          formAction(formData);
-      });
+    const formData = new FormData();
+    formData.append('title', data.title);
+    
+    if (data.summary) {
+      formData.append('summary', data.summary);
+    }
+    
+    if (data.conclusions) {
+      // Convert array to JSON string for FormData
+      formData.append('conclusions', JSON.stringify(parseForSubmission(data.conclusions)));
+    }
+    
+    if (data.keyData) {
+      // Convert array to JSON string for FormData
+      formData.append('keyData', JSON.stringify(parseForSubmission(data.keyData)));
+    }
+    
+    startUpdateTransition(() => {
+      formAction(formData);
+    });
   };
 
   // Handler for initiating delete
@@ -154,12 +215,26 @@ export default function ReportEditForm({ initialData }: ReportEditFormProps) {
               )}
             />
 
-            {/* Section Editors */}
-            <ReportSectionEditor<ReportEditFormViewModel>
-                label="Streszczenie"
-                fieldName="summary"
-                control={control}
+            {/* Summary Field - Using regular input */}
+            <FormField
+              control={control}
+              name="summary"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Streszczenie</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Wpisz streszczenie raportu..."
+                      {...field}
+                      disabled={isSubmitting || isDeleting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
+
+            {/* Section Editors */}
             <ReportSectionEditor<ReportEditFormViewModel>
                 label="Wnioski"
                 fieldName="conclusions"
@@ -200,4 +275,6 @@ export default function ReportEditForm({ initialData }: ReportEditFormProps) {
       />
     </Card>
   );
-} 
+}
+
+export default ReportEditForm; 

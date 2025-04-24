@@ -15,6 +15,33 @@ async function getUserId(): Promise<string> {
   return user.id;
 }
 
+// Helper to convert various formats to array with proper dash formatting
+function formatTextToArray(text: string): string[] {
+  // If text contains comma separators and not already dash-formatted
+  if (text.includes(',') && !text.includes('\n-')) {
+    return text.split(',')
+      .map(item => item.trim())
+      .filter(item => item.length > 0);
+  }
+  
+  // If it contains newlines with dashes
+  if (text.includes('\n-')) {
+    const lines = text.split('\n-').map(line => line.trim());
+    // Process first line (might have dash prefix)
+    const firstLine = lines.shift() || '';
+    const firstItem = firstLine.startsWith('-') ? 
+      firstLine.substring(1).trim() : firstLine;
+    
+    // Build array with all items
+    const result = firstItem ? [firstItem] : [];
+    result.push(...lines.filter(line => line));
+    return result;
+  }
+  
+  // Single line item
+  return [text.trim()];
+}
+
 // Function to get report details from Supabase
 async function getReportDetails(id: number, userId: string): Promise<ReportDto | null> {
   const supabase = await createClient();
@@ -37,46 +64,16 @@ async function getReportDetails(id: number, userId: string): Promise<ReportDto |
   
   if (!data) return null;
   
-  // Parse conclusions to array
+  // Process conclusions data
   let conclusionsData: string | string[] = data.conclusions || '';
-  // Check if it's a comma-separated list
-  if (typeof conclusionsData === 'string') {
-    if (conclusionsData.includes('\n-')) {
-      // Handle newline with dash format
-      const lines = conclusionsData.split('\n-').map(line => line.trim());
-      const firstLine = lines.shift() || '';
-      const firstItem = firstLine.startsWith('-') ? 
-        firstLine.substring(1).trim() : firstLine;
-      
-      conclusionsData = firstItem ? [firstItem] : [];
-      conclusionsData.push(...lines.filter(line => line));
-    } else if (conclusionsData.includes(',')) {
-      // Handle comma-separated format
-      conclusionsData = conclusionsData.split(',')
-        .map(item => item.trim())
-        .filter(item => item.length > 0);
-    }
+  if (typeof conclusionsData === 'string' && conclusionsData.trim().length > 0) {
+    conclusionsData = formatTextToArray(conclusionsData);
   }
   
-  // Parse key_data to array
+  // Process key_data
   let keyDataValue: string | string[] = data.key_data || '';
-  // Check if it's a comma-separated list
-  if (typeof keyDataValue === 'string') {
-    if (keyDataValue.includes('\n-')) {
-      // Handle newline with dash format
-      const lines = keyDataValue.split('\n-').map(line => line.trim());
-      const firstLine = lines.shift() || '';
-      const firstItem = firstLine.startsWith('-') ? 
-        firstLine.substring(1).trim() : firstLine;
-      
-      keyDataValue = firstItem ? [firstItem] : [];
-      keyDataValue.push(...lines.filter(line => line));
-    } else if (keyDataValue.includes(',')) {
-      // Handle comma-separated format
-      keyDataValue = keyDataValue.split(',')
-        .map(item => item.trim())
-        .filter(item => item.length > 0);
-    }
+  if (typeof keyDataValue === 'string' && keyDataValue.trim().length > 0) {
+    keyDataValue = formatTextToArray(keyDataValue);
   }
   
   // Map database fields to DTO format
