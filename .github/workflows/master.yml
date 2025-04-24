@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Pages
+name: Deploy to Vercel
 
 on:
   push:
@@ -72,7 +72,7 @@ jobs:
         name: Perform CodeQL Analysis
 
   validate-secrets:
-    name: Validate Cloudflare Secrets
+    name: Validate Vercel Secrets
     runs-on: ubuntu-latest
     outputs:
       has-secrets: ${{ steps.check-secrets.outputs.has-secrets }}
@@ -80,15 +80,15 @@ jobs:
       - id: check-secrets
         name: Check required secrets
         run: |
-          if [[ -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" && -n "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]]; then
+          if [[ -n "${{ secrets.VERCEL_TOKEN }}" && -n "${{ secrets.VERCEL_ORG_ID }}" && -n "${{ secrets.VERCEL_PROJECT_ID }}" ]]; then
             echo "has-secrets=true" >> $GITHUB_OUTPUT
           else
             echo "has-secrets=false" >> $GITHUB_OUTPUT
-            echo "::warning::Missing required Cloudflare secrets. CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID must be set in GitHub secrets. Deployment will be skipped."
+            echo "::warning::Missing required Vercel secrets. VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID must be set in GitHub secrets. Deployment will be skipped."
           fi
 
   deploy:
-    name: Deploy to Cloudflare Pages
+    name: Deploy to Vercel
     needs: [lint, unit-test, code-scanning, validate-secrets]
     if: needs.validate-secrets.outputs.has-secrets == 'true'
     runs-on: ubuntu-latest
@@ -101,7 +101,9 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
-      CLOUDFLARE_API_DEBUG: true
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       NODE_OPTIONS: "--max-old-space-size=4096"
     steps:
       - uses: actions/checkout@v4
@@ -111,9 +113,7 @@ jobs:
           node-version-file: ".nvmrc"
           cache: npm
       - name: Install dependencies
-        run: |
-          npm ci
-          npm install -D webpack @types/webpack
+        run: npm ci
 
       # Cache Next.js build output
       - name: Cache Next.js build
@@ -125,26 +125,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
 
-      - name: Build project
-        run: npm run build
-
-      # Przygotowanie plików do deploy - wykluczenie cache
-      - name: Prepare deployment files
-        run: |
-          # Usuń duże pliki cache, które przekraczają limit 25MB
-          find .next -type f -size +20M -exec rm -f {} \;
-          # Wyświetl wszystkie duże pliki dla debugowania
-          find .next -type f -size +10M | xargs ls -lh || true
-
-      # Wdrożenie na Cloudflare Pages w oparciu o oficjalną dokumentację
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1.5.0
+      # Deploy to Vercel
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: reports
-          directory: .next
-          wranglerVersion: 3
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./
+          vercel-args: "--prod"
 
   deploy-skip-notice:
     name: Deployment Skipped Notice
@@ -154,6 +143,6 @@ jobs:
     steps:
       - name: Output Skip Notice
         run: |
-          echo "::error::Deployment to Cloudflare Pages was skipped because required secrets are missing."
-          echo "Please add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to the repository secrets."
-          echo "For instructions, see: https://github.com/cloudflare/pages-action#usage"
+          echo "::error::Deployment to Vercel was skipped because required secrets are missing."
+          echo "Please add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID to the repository secrets."
+          echo "For instructions, see: https://vercel.com/docs/cli#introduction/vercel-cli-reference/env"
