@@ -43,7 +43,7 @@ export default async function ProtectedLayout({
         </div>
       </aside>
 
-      <main className="flex flex-1 flex-col p-6">
+      <main className="flex flex-1 flex-col p-6 md:ml-64">
         {children}
       </main>
       

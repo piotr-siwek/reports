@@ -41,8 +41,33 @@ export default function GenerateReportForm() {
     startGenerating(async () => {
       const result = await generateReportPreview(command);
       if (result.success && result.data) {
+        // Log successful generation
+        console.log('Generated Report Data:', result.data);
+
+        // Store the generated content
         setGeneratedContent(result.data);
+        
+        // Update editor content with generated data
+        // Make a direct copy to ensure we pass the exact data format
+        setEditorContent({
+          summary: result.data.summary,
+          conclusions: result.data.conclusions,
+          keyData: result.data.keyData
+        });
+        
+        // Default title from first sentence of summary (up to 50 chars)
+        const firstSentence = result.data.summary.split('.')[0];
+        const defaultTitle = firstSentence.length > 50 
+          ? firstSentence.substring(0, 47) + '...' 
+          : firstSentence;
+        setTitle(defaultTitle);
+
         console.log('Toast placeholder: Podgląd raportu wygenerowany!');
+        console.log('Editor content after generation:', {
+          summary: result.data.summary,
+          conclusions: result.data.conclusions,
+          keyData: result.data.keyData
+        });
       } else {
         setGenerateError(result.error || 'Nieznany błąd podczas generowania.');
         console.error('Toast placeholder: Błąd generowania', result.error);
@@ -58,6 +83,11 @@ export default function GenerateReportForm() {
     }
     setSaveError(null);
 
+    // Debug logs to check the state
+    console.log("Editor Content:", editorContent);
+    console.log("Generated Content:", generatedContent);
+    console.log("Title:", title);
+
     const command: CreateReportCommand = {
       title: title,
       originalText: generatedContent.originalText,
@@ -66,9 +96,33 @@ export default function GenerateReportForm() {
       keyData: editorContent.keyData,
     };
 
-    if (!command.summary || !command.conclusions || !command.keyData) {
-      setSaveError("Podsumowanie, Wnioski i Kluczowe Dane nie mogą być puste.");
-      console.error('Toast placeholder: Błąd zapisu - Puste pola edytora');
+    console.log("Command to save:", command);
+
+    // Simplified validation - just check if any content field is falsy
+    if (!title.trim()) {
+      setSaveError("Tytuł raportu nie może być pusty.");
+      console.error('Toast placeholder: Błąd zapisu - Pusty tytuł');
+      return;
+    }
+
+    // Ensure we have non-empty content in all required fields
+    if (!editorContent.summary.trim()) {
+      setSaveError("Podsumowanie nie może być puste.");
+      return;
+    }
+
+    // For conclusions - handle both string and array types
+    const hasConclusions = typeof editorContent.conclusions === 'string' 
+      ? editorContent.conclusions.trim().length > 0
+      : Array.isArray(editorContent.conclusions) && editorContent.conclusions.length > 0;
+    
+    if (!hasConclusions) {
+      setSaveError("Wnioski nie mogą być puste.");
+      return;
+    }
+
+    if (!editorContent.keyData.trim()) {
+      setSaveError("Kluczowe Dane nie mogą być puste.");
       return;
     }
 

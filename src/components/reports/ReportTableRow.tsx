@@ -1,4 +1,4 @@
-import React from 'react';
+"use client";
 import Link from 'next/link';
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";

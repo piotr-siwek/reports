@@ -8,8 +8,8 @@ import {
   CreateReportResponseDto,
   ReportDto,
 } from '@/types';
-// Use correct Supabase client import based on provided file
-// import { createClient } from '@/lib/supabase-server'; // Commented out AGAIN - Fix DB types/schema mismatch
+// Use correct Supabase client import
+import { createClient } from '@/lib/supabase-server';
 
 // Helper type for errors with a potential status property
 // interface ApiError extends Error { // No longer needed as apiClient is removed
@@ -141,23 +141,30 @@ export async function saveReport(
   command: CreateReportCommand
 ): Promise<{ success: boolean; data?: CreateReportResponseDto; error?: string }> {
 
+  // Add debug logging
+  console.log("SaveReport received command:", JSON.stringify(command, null, 2));
+
+  // Enhanced validation with better error messages
   const validation = z.object({
     title: z.string().min(1, "Tytuł jest wymagany."),
-    originalText: z.string().min(1),
-    summary: z.string().min(1),
-    conclusions: z.string().min(1),
-    keyData: z.string().min(1),
+    originalText: z.string().min(1, "Tekst źródłowy jest wymagany."),
+    summary: z.string().min(1, "Podsumowanie jest wymagane."),
+    conclusions: z.union([
+      z.string().min(1, "Wnioski są wymagane."),
+      z.array(z.string()).min(1, "Wnioski są wymagane.")
+    ]),
+    keyData: z.string().min(1, "Kluczowe dane są wymagane."),
   }).safeParse(command);
 
   if (!validation.success) {
     const formattedErrors = validation.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('\n');
+    console.error("Validation errors:", formattedErrors);
     return { success: false, error: `Błąd walidacji przed zapisem:\n${formattedErrors}` };
   }
 
-  // --- Supabase Integration (Commented Out - Requires Correct DB Types/Schema) ---
-  /*
+  // --- Supabase Integration ---
   let supabase;
-  let numericUserId: number | undefined;
+  let userId: string;
 
   try {
     supabase = await createClient(); 
@@ -165,44 +172,33 @@ export async function saveReport(
 
     if (authError) throw authError;
     if (!user) throw new Error('User not authenticated.');
-    const authUserId = user.id; 
-
-    // TODO: Verify 'profiles' table name and columns ('id', 'user_id') are correct in your DB and generated types
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles') // This caused error if 'profiles' not in generated types
-      .select('id')      
-      .eq('user_id', authUserId) 
-      .single();
-
-    if (profileError) {
-        console.error("Error fetching user profile:", profileError);
-        throw new Error('Could not fetch user profile information.');
-    }
-    if (!profile) {
-        console.error(`Profile not found for auth user ID: ${authUserId}`);
-        throw new Error('User profile not found.');
-    }
-
-    numericUserId = profile.id; 
+    userId = user.id;
 
   } catch (error: unknown) {
-      console.error("Supabase auth/profile error:", error);
-      const message = error instanceof Error ? error.message : "Unknown auth/profile error";
-      return { success: false, error: `Błąd autoryzacji lub profilu użytkownika: ${message}` };
+    console.error("Supabase auth error:", error);
+    const message = error instanceof Error ? error.message : "Unknown auth error";
+    return { success: false, error: `Błąd autoryzacji: ${message}` };
   }
 
-  // Prepare data for insertion using the numeric user ID
+  // Normalize conclusions format if it's an array
+  const conclusionsForDB = Array.isArray(command.conclusions) 
+    ? command.conclusions.join('\n- ') 
+    : command.conclusions;
+
+  // Prepare data for insertion using the user ID directly
   const reportDataToInsert = {
-    user_id: numericUserId, // Use the numeric ID here
-    title: command.title,
+    user_id: userId, // Use the Supabase auth user ID directly
+    title: command.title.trim(),
     original_text: command.originalText,
-    summary: command.summary,
-    conclusions: command.conclusions,
-    key_data: command.keyData,
+    summary: command.summary.trim(),
+    conclusions: conclusionsForDB,
+    key_data: command.keyData.trim(),
   };
 
   try {
-    // TODO: Verify 'reports' table name and columns are correct in your DB and generated types
+    console.log("Inserting report to DB:", reportDataToInsert);
+    
+    // Insert the report data
     const { data: insertedReport, error: insertError } = await supabase
       .from('reports') 
       .insert(reportDataToInsert) 
@@ -215,22 +211,23 @@ export async function saveReport(
     }
 
     if (!insertedReport) {
-        return { success: false, error: "Nie udało się pobrać zapisanego raportu z bazy danych." };
+      return { success: false, error: "Nie udało się pobrać zapisanego raportu z bazy danych." };
     }
 
-    // Mapping DB response (user_id should be number)
-    // TODO: Ensure 'title' exists in insertedReport type after regenerating DB types
+    // Map the DB response to our DTO format
     const savedReportDto: ReportDto = {
       id: insertedReport.id,
-      userId: insertedReport.user_id, // Should be number
-      title: insertedReport.title ?? '', // This caused error if 'title' not in generated types
-      originalText: insertedReport.original_text ?? '',
-      summary: insertedReport.summary ?? '',
-      conclusions: insertedReport.conclusions ?? '',
-      keyData: insertedReport.key_data ?? '',
+      userId: insertedReport.user_id,
+      title: insertedReport.title || '',
+      originalText: insertedReport.original_text || '',
+      summary: insertedReport.summary || '',
+      conclusions: insertedReport.conclusions || '',
+      keyData: insertedReport.key_data || '',
       createdAt: insertedReport.created_at,
       updatedAt: insertedReport.updated_at,
     };
+
+    console.log("Report saved successfully:", savedReportDto.id);
 
     return {
       success: true,
@@ -245,28 +242,4 @@ export async function saveReport(
     const message = error instanceof Error ? error.message : "Nieznany błąd bazy danych";
     return { success: false, error: `Wystąpił nieoczekiwany błąd podczas zapisu: ${message}` };
   }
-  */
-
-  // --- Placeholder response until Supabase is integrated (Re-added) ---
-  console.warn("Supabase saving is commented out. Verify DB schema, regenerate types, and uncomment. Returning mock success.");
-  await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-   const mockSavedReport: ReportDto = {
-      id: Math.floor(Math.random() * 1000),
-      userId: '1', // Placeholder string user ID
-      title: command.title,
-      originalText: command.originalText,
-      summary: command.summary,
-      conclusions: command.conclusions,
-      keyData: command.keyData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-  return {
-      success: true,
-      data: {
-        message: "Raport zapisany pomyślnie (MOCK).",
-        report: mockSavedReport,
-      },
-    };
-  // --- End Placeholder ---
 } 
