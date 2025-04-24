@@ -125,23 +125,23 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # Sprawdzenie danych projektu w Cloudflare
-      - name: Debug Cloudflare Account Info
+      # Przygotowanie plików do deploy - wykluczenie cache
+      - name: Prepare deployment files
         run: |
-          echo "Trying to access Cloudflare account details..."
-          curl -s -X GET "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects" \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-            -H "Content-Type: application/json" | jq '.result[].name'
+          # Usuń duże pliki cache, które przekraczają limit 25MB
+          find .next -type f -size +20M -exec rm -f {} \;
+          # Wyświetl wszystkie duże pliki dla debugowania
+          find .next -type f -size +10M | xargs ls -lh
 
-      - name: Publish to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+      # Wdrożenie na Cloudflare Pages w oparciu o oficjalną dokumentację
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1.5.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: reports
           directory: .next
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          wranglerVersion: "3"
+          wranglerVersion: 3
 
   deploy-skip-notice:
     name: Deployment Skipped Notice
