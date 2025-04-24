@@ -1,13 +1,5 @@
 {
   "name": "reports",
   "compatibility_date": "2024-07-29",
-  "main": ".next/standalone/server.js",
-  "build": {
-    "command": "npm run build",
-    "cwd": "."
-  },
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "workers_dev": true
+  "pages_build_output_dir": ".next"
 }
