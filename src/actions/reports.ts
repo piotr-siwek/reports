@@ -43,29 +43,40 @@ export async function generateReportPreview(
   }
 
   const prompt = `
-You are an analytical assistant. Your task is to analyze the text below and return a JSON object with exactly three keys:
-  • "summary" (string): a concise summary of the text,
-  • "conclusions" (array of strings): a list of key conclusions,
-  • "keyData" (string): a single string containing ONLY all critical data points, separated by dashes or commas.
-
-In particular, do NOT omit any information related to:
-  - dates (day, month, year, or time ranges),
-  - amounts (including currency and units),
-  - tasks and actions ("what needs to be done"),
-  - decisions to be made,
-  - deadlines,
-  - people, departments, or roles responsible for decisions,
-  - locations,
-  - reference numbers or identifiers,
-  - execution conditions, requirements, or KPIs.
-
-Text to analyze:
----
-${command.originalText}
----
-
-**The response MUST be a valid JSON object and MUST be written in Polish.**  
-No additional text or comments are allowed—only the JSON.`;
+  === SECTION 1: ASSISTANT TASK ===
+  You are an analytical assistant. Your task is to analyze the text below and RETURN A SINGLE VALID JSON OBJECT with exactly three keys:
+    1. "summary" (string) — a concise, coherent summary of the entire text.
+    2. "conclusions" (array[string]) — a list of discrete, key conclusions drawn from the text.
+    3. "keyData" (array[string]) — every critical data point, each formatted as "context – value" (e.g., "jacket – 500 PLN").
+  
+  === SECTION 2: MANDATORY CONTENT ===
+  You MUST NOT OMIT any information about:
+    • Dates: exact days, months, years, or time ranges  
+    • Amounts: quantities, currencies, units  
+    • Tasks & Actions: “what needs to be done”  
+    • Decisions: what decisions remain to be made  
+    • Deadlines: final dates or timeframes  
+    • Responsibilities: people, departments, or roles in charge  
+    • Locations: venues, addresses, or places  
+    • Reference IDs: numbers, codes, or identifiers  
+    • Conditions & Requirements: execution criteria, prerequisites, or KPIs  
+  
+  Each item in **keyData** must include its full context.  
+  For example:  
+    - "project deadline – 30 April 2025" 
+    - "budget increase request – 200 000 EUR"  
+    - "John Kowalski (IT Dept.) – responsible for server upgrade"
+  
+  === SECTION 3: TEXT TO ANALYZE ===
+  ---
+  ${command.originalText}
+  ---
+  
+  **IMPORTANT NOTES:**  
+  1. **ONLY** output the JSON object—no extra comments, no wrapper text.  
+  2. The JSON MUST be syntactically valid.  
+  3. The JSON values (strings, arrays) MUST be in Polish.`;
+  
 
   
 
