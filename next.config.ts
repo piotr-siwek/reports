@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
             generator: { filename: 'static/fonts/[name].[hash][ext]' }
         });
         return config;
+    },
+    // Optimize for Cloudflare Pages
+    output: 'standalone',
+    experimental: {
+        optimizePackageImports: ['lucide-react'],
     }
 };
 

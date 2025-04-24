@@ -1,0 +1,41 @@
+{
+  "pages": {
+    "compatibilityDate": "2024-07-29",
+    "compatibilityFlags": ["nodejs_compat"]
+  },
+  "build": {
+    "command": "npm run build",
+    "output": ".next"
+  },
+  // Configure environment variables
+  "env": {
+    "production": {
+      // Production specific variables can be added here
+      "NODE_ENV": "production"
+    },
+    "preview": {
+      // Preview specific variables can be added here
+      "NODE_ENV": "production"
+    }
+  },
+  // Routes configuration
+  "routes": [
+    { "pattern": "/api/*", "script": "api" },
+    { "pattern": "/*", "script": "default" }
+  ],
+  // Functions configuration
+  "functions": {
+    "api": {
+      "memory": 512,
+      "maxDuration": 30
+    },
+    "default": {
+      "memory": 256,
+      "maxDuration": 15
+    }
+  },
+  // Specify build output configuration
+  "site": {
+    "bucket": ".next"
+  }
+}

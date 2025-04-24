@@ -12,7 +12,10 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:debug": "playwright test --debug"
+    "test:e2e:debug": "playwright test --debug",
+    "cloudflare:dev": "wrangler pages dev --compatibility-date=2024-07-29 .next",
+    "cloudflare:deploy": "wrangler pages deploy .next --branch main",
+    "cloudflare:validate": "wrangler pages validate"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -44,6 +47,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@opennextjs/cloudflare": "^1.0.0-beta.3",
     "@playwright/test": "^1.41.2",
     "@tailwindcss/postcss": "^4",
     "@types/dompurify": "^3.0.5",

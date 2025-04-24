@@ -8,6 +8,7 @@ AI-powered application for automatic generation of reports from text input.
 - [Getting Started](#getting-started)
 - [Available Scripts](#available-scripts)
 - [Testing](#testing)
+- [CI/CD & Deployment](#ci-cd--deployment)
 - [Project Scope](#project-scope)
 - [Project Status](#project-status)
 - [License](#license)
@@ -51,7 +52,8 @@ Manual report creation from source texts is time-consuming, error-prone, ineffic
 
 ### CI/CD & Hosting
 - GitHub Actions for CI/CD pipelines
-- DigitalOcean hosting via Docker image
+- Cloudflare Pages for hosting
+- DigitalOcean hosting via Docker image (alternative)
 
 ## Getting Started
 
@@ -150,6 +152,31 @@ The project is currently in the early development phase. The PRD has been create
 ## License
 
 This project is licensed under the [LICENSE NAME] - see the LICENSE file for details.
+
+## CI/CD & Deployment
+
+### Continuous Integration
+The project uses GitHub Actions for continuous integration workflows:
+
+- **Pull Request Workflow** - Runs on all pull requests to the main branch:
+  - Linting
+  - Unit tests with coverage
+  - E2E tests
+  - CodeQL security scanning
+
+- **Deployment Workflow** - Runs on pushes to the main branch:
+  - Linting
+  - Unit tests with coverage
+  - CodeQL security scanning
+  - Automatic deployment to Cloudflare Pages
+
+### Cloudflare Pages Deployment
+The application is deployed to Cloudflare Pages for fast, global delivery. The deployment configuration is defined in the `wrangler.jsonc` file in the project root.
+
+To deploy manually:
+```bash
+npx wrangler pages deploy .next
+```
 
 ---
 
