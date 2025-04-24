@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   security-events: write
+  deployments: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -92,11 +93,15 @@ jobs:
     if: needs.validate-secrets.outputs.has-secrets == 'true'
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      deployments: write
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+      CLOUDFLARE_API_DEBUG: true
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -119,6 +124,14 @@ jobs:
 
       - name: Build project
         run: npm run build
+
+      # Sprawdzenie danych projektu w Cloudflare
+      - name: Debug Cloudflare Account Info
+        run: |
+          echo "Trying to access Cloudflare account details..."
+          curl -s -X GET "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" | jq '.result[].name'
 
       - name: Publish to Cloudflare Pages
         uses: cloudflare/pages-action@v1
