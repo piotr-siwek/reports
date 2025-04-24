@@ -70,9 +70,26 @@ jobs:
       - uses: github/codeql-action/analyze@v3
         name: Perform CodeQL Analysis
 
+  validate-secrets:
+    name: Validate Cloudflare Secrets
+    runs-on: ubuntu-latest
+    outputs:
+      has-secrets: ${{ steps.check-secrets.outputs.has-secrets }}
+    steps:
+      - id: check-secrets
+        name: Check required secrets
+        run: |
+          if [[ -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" && -n "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]]; then
+            echo "has-secrets=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-secrets=false" >> $GITHUB_OUTPUT
+            echo "::warning::Missing required Cloudflare secrets. CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID must be set in GitHub secrets. Deployment will be skipped."
+          fi
+
   deploy:
     name: Deploy to Cloudflare Pages
-    needs: [lint, unit-test, code-scanning]
+    needs: [lint, unit-test, code-scanning, validate-secrets]
+    if: needs.validate-secrets.outputs.has-secrets == 'true'
     runs-on: ubuntu-latest
     environment: production
     env:
@@ -112,3 +129,15 @@ jobs:
           directory: .next
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: "3"
+
+  deploy-skip-notice:
+    name: Deployment Skipped Notice
+    needs: [validate-secrets]
+    if: needs.validate-secrets.outputs.has-secrets != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Output Skip Notice
+        run: |
+          echo "::error::Deployment to Cloudflare Pages was skipped because required secrets are missing."
+          echo "Please add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to the repository secrets."
+          echo "For instructions, see: https://github.com/cloudflare/pages-action#usage"

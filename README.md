@@ -173,6 +173,22 @@ The project uses GitHub Actions for continuous integration workflows:
 ### Cloudflare Pages Deployment
 The application is deployed to Cloudflare Pages for fast, global delivery. The deployment configuration is defined in the `wrangler.jsonc` file in the project root.
 
+#### Required Secrets for Deployment
+To enable automatic deployment to Cloudflare Pages, you need to add the following secrets to your GitHub repository:
+
+1. `CLOUDFLARE_API_TOKEN` - API token with Cloudflare Pages permissions
+   - Go to Cloudflare Dashboard > My Profile > API Tokens
+   - Create a custom token with Pages:Edit permissions
+   
+2. `CLOUDFLARE_ACCOUNT_ID` - Your Cloudflare account ID
+   - Find it in the URL when logged into Cloudflare dashboard: `https://dash.cloudflare.com/<ACCOUNT_ID>/`
+
+3. Add other environment secrets:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `OPENAI_API_KEY`
+   - `NEXT_PUBLIC_SITE_URL`
+
 To deploy manually:
 ```bash
 npx wrangler pages deploy .next
