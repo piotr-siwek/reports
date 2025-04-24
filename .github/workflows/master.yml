@@ -102,6 +102,7 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
       CLOUDFLARE_API_DEBUG: true
+      NODE_OPTIONS: "--max-old-space-size=4096"
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -110,7 +111,9 @@ jobs:
           node-version-file: ".nvmrc"
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm install -D webpack @types/webpack
 
       # Cache Next.js build output
       - name: Cache Next.js build
@@ -131,7 +134,7 @@ jobs:
           # Usuń duże pliki cache, które przekraczają limit 25MB
           find .next -type f -size +20M -exec rm -f {} \;
           # Wyświetl wszystkie duże pliki dla debugowania
-          find .next -type f -size +10M | xargs ls -lh
+          find .next -type f -size +10M | xargs ls -lh || true
 
       # Wdrożenie na Cloudflare Pages w oparciu o oficjalną dokumentację
       - name: Deploy to Cloudflare Pages
