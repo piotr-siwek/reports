@@ -10,48 +10,89 @@ import { createClient } from '@/lib/supabase-server';
 import { ListReportsResponseDto, PaginationDto, ReportSummaryDto } from '@/types';
 import { Tables } from '@/db/database.types';
 
-// --- Placeholder: Get User ID ---
-// Replace with actual function to get authenticated user ID server-side
+// --- Get authenticated user ID from Supabase ---
 async function getUserIdServer(): Promise<string> {
-  // Simulate getting user ID (e.g., from session/auth context)
-  return '1';
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  if (error || !user) {
+    throw new Error('User not authenticated');
+  }
+  
+  return user.id;
 }
-// --- End Placeholder ---
 
-// --- Placeholder: Report Service ---
-// Replace with actual service import and implementation
+// --- Supabase report service implementation ---
 const reportService = {
   async updateReport(id: number, userId: string, data: UpdateReportCommand): Promise<ReportDto> {
-    console.log(`Updating report ${id} for user ${userId} with SANITIZED data:`, data);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-    if (id === 400) throw new Error("Simulated Validation Error from API"); // Simulate validation error
-    if (id === 404) throw new Error("Simulated Not Found Error from API");
-    // Simulate success - return updated data (merge for demo)
+    const supabase = await createClient();
+    
+    // Prepare data for update with proper typing that matches database schema
+    const updateData: {
+      title?: string | null;
+      original_text?: string | null;
+      summary?: string | null;
+      conclusions?: string | string[] | null;
+      key_data?: string | null;
+      updated_at: string;
+    } = {
+      updated_at: new Date().toISOString()
+    };
+    
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.originalText !== undefined) updateData.original_text = data.originalText;
+    if (data.summary !== undefined) updateData.summary = data.summary;
+    if (data.conclusions !== undefined) updateData.conclusions = data.conclusions;
+    if (data.keyData !== undefined) updateData.key_data = data.keyData;
+    
+    // Update the report
+    const { data: updatedReport, error } = await supabase
+      .from('reports')
+      .update(updateData)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select('*')
+      .single();
+    
+    if (error) {
+      console.error('Error updating report:', error);
+      throw new Error(`Failed to update report: ${error.message}`);
+    }
+    
+    if (!updatedReport) {
+      throw new Error('Report not found or you do not have permission to edit it');
+    }
+    
+    // Map database fields to DTO format
     return {
-      id: id,
-      userId: userId,
-      title: data.title ?? `Updated Title ${id}`,
-      originalText: data.originalText ?? `Original text ${id}`,
-      summary: data.summary ?? `<p>Updated summary ${id}</p>`,
-      conclusions: data.conclusions ?? `<p>Updated conclusions ${id}</p>`,
-      keyData: data.keyData ?? `<p>Updated key data ${id}</p>`,
-      createdAt: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-      updatedAt: new Date().toISOString(),
+      id: updatedReport.id,
+      userId: updatedReport.user_id,
+      title: updatedReport.title || '',
+      originalText: updatedReport.original_text || '',
+      summary: updatedReport.summary || '',
+      conclusions: updatedReport.conclusions || '',
+      keyData: updatedReport.key_data || '',
+      createdAt: updatedReport.created_at,
+      updatedAt: updatedReport.updated_at,
     };
   },
+  
   async deleteReport(id: number, userId: string): Promise<void> {
-    console.log(`Deleting report ${id} for user ${userId}...`);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-     if (id === 404) throw new Error("Simulated Not Found Error during delete");
-    if (id === 500) throw new Error("Simulated Server Error during delete");
-    // Simulate success
-    return;
+    const supabase = await createClient();
+    
+    // Delete the report
+    const { error } = await supabase
+      .from('reports')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Error deleting report:', error);
+      throw new Error(`Failed to delete report: ${error.message}`);
+    }
   }
 };
-// --- End Placeholder ---
-
 
 // Schema for the form data received by the update action
 const reportEditSchemaServer = z.object({

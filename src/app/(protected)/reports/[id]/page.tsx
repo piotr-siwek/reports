@@ -1,77 +1,88 @@
 import { notFound } from 'next/navigation';
-import ReportEditForm from '@/components/feature/report-details/ReportEditForm'; // Adjust path as needed
-import { ReportDto } from '@/types'; // Assuming types are in src/types.ts
+import ReportEditForm from '@/components/feature/report-details/ReportEditForm';
+import { ReportDto } from '@/types';
+import { createClient } from '@/lib/supabase-server';
 
-// --- Placeholder ---
-// Replace with actual service import and implementation
-const reportService = {
-  async getReportDetails(id: number, userId: string): Promise<ReportDto | null> {
-    console.log(`Fetching report ${id} for user ${userId}...`);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    if (id === 999) return null; // Simulate Not Found
-    if (id === 500) throw new Error("Simulated Server Error"); // Simulate Server Error
-
-    return {
-      id: id,
-      userId: userId,
-      title: `Sample Report ${id}`,
-      originalText: "Original text for report " + id,
-      summary: "<p>Summary for report " + id + "</p>",
-      conclusions: "<p>Conclusions for report " + id + "</p>",
-      keyData: "<p>Key data for report " + id + "</p>",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-  }
-};
-
-// --- Placeholder ---
-// Replace with actual function to get authenticated user ID
+// Async function to get authenticated user ID from Supabase auth
 async function getUserId(): Promise<string> {
-  // Simulate getting user ID (e.g., from session)
-  return '1';
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  if (error || !user) {
+    throw new Error('User not authenticated');
+  }
+  
+  return user.id;
 }
-// --- End Placeholder ---
 
+// Function to get report details from Supabase
+async function getReportDetails(id: number, userId: string): Promise<ReportDto | null> {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('reports')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', userId)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching report:', error);
+    if (error.code === 'PGRST116') {
+      // PostgreSQL error for "no rows returned" - handle as not found
+      return null;
+    }
+    throw new Error(`Failed to fetch report: ${error.message}`);
+  }
+  
+  if (!data) return null;
+  
+  // Map database fields to DTO format
+  return {
+    id: data.id,
+    userId: data.user_id,
+    title: data.title || '',
+    originalText: data.original_text || '',
+    summary: data.summary || '',
+    conclusions: data.conclusions || '',
+    keyData: data.key_data || '',
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
 
 interface ReportDetailsPageProps {
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
 }
 
 export default async function ReportDetailsPage({ params }: ReportDetailsPageProps) {
-  const reportId = parseInt((await params).id, 10);
+  const reportId = parseInt(params.id, 10);
 
   // Validate ID
   if (isNaN(reportId)) {
     notFound(); // Treat non-numeric ID as Not Found
   }
 
-  const userId = await getUserId(); // Fetch user ID
-
-  let reportData: ReportDto | null = null;
   try {
-    reportData = await reportService.getReportDetails(reportId, userId);
+    const userId = await getUserId(); // Fetch authenticated user ID
+    const reportData = await getReportDetails(reportId, userId);
+
+    // Handle Not Found
+    if (!reportData) {
+      notFound();
+    }
+
+    // Render the form, passing the fetched data
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <ReportEditForm initialData={reportData} />
+      </div>
+    );
   } catch (error) {
-    console.error("Error fetching report details:", error);
+    console.error("Error in report details page:", error);
     // Let Next.js handle the error via error.tsx
-    // You might want more specific error handling here in a real app
-    throw new Error('Failed to load report data.'); // Re-throw to trigger error boundary
+    throw new Error('Failed to load report data.');
   }
-
-
-  // Handle Not Found specifically
-  if (!reportData) {
-    notFound();
-  }
-
-  // Render the form, passing the fetched data
-  return (
-    <div className="container mx-auto px-4 py-8">
-      {/* We pass initialData, ReportEditForm will handle the form state */}
-      <ReportEditForm initialData={reportData} />
-    </div>
-  );
 } 
