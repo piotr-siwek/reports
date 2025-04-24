@@ -10,14 +10,9 @@ const nextConfig: NextConfig = {
         
         return config;
     },
-    // Optimize for Cloudflare Pages
     output: 'standalone',
     experimental: {
         optimizePackageImports: ['lucide-react'],
-    },
-    // For cloudflare
-    images: {
-        unoptimized: true // Cloudflare Pages doesn't support the default Next.js image optimization
     },
 };
 

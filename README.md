@@ -52,7 +52,7 @@ Manual report creation from source texts is time-consuming, error-prone, ineffic
 
 ### CI/CD & Hosting
 - GitHub Actions for CI/CD pipelines
-- Cloudflare Pages for hosting
+- Vercel for hosting
 - DigitalOcean hosting via Docker image (alternative)
 
 ## Getting Started
@@ -168,31 +168,29 @@ The project uses GitHub Actions for continuous integration workflows:
   - Linting
   - Unit tests with coverage
   - CodeQL security scanning
-  - Automatic deployment to Cloudflare Pages
+  - Automatic deployment to Vercel
 
-### Cloudflare Pages Deployment
-The application is deployed to Cloudflare Pages for fast, global delivery. The deployment configuration is defined in the `wrangler.jsonc` file in the project root.
+### Vercel Deployment
+The application is deployed to Vercel for fast, global delivery. The deployment is configured through GitHub Actions.
 
 #### Required Secrets for Deployment
-To enable automatic deployment to Cloudflare Pages, you need to add the following secrets to your GitHub repository:
+To enable automatic deployment to Vercel, you need to add the following secrets to your GitHub repository:
 
-1. `CLOUDFLARE_API_TOKEN` - API token with Cloudflare Pages permissions
-   - Go to Cloudflare Dashboard > My Profile > API Tokens
-   - Create a custom token with Pages:Edit permissions
+1. `VERCEL_TOKEN` - API token with Vercel deployment permissions
+   - Go to Vercel Dashboard > Settings > Tokens
+   - Create a new token with appropriate permissions
    
-2. `CLOUDFLARE_ACCOUNT_ID` - Your Cloudflare account ID
-   - Find it in the URL when logged into Cloudflare dashboard: `https://dash.cloudflare.com/<ACCOUNT_ID>/`
+2. `VERCEL_ORG_ID` - Your Vercel organization ID
+   - Find it in your Vercel account settings
 
-3. Add other environment secrets:
+3. `VERCEL_PROJECT_ID` - Your Vercel project ID
+   - Find it in your project settings in Vercel
+
+4. Add other environment secrets:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `OPENAI_API_KEY`
    - `NEXT_PUBLIC_SITE_URL`
-
-To deploy manually:
-```bash
-npx wrangler pages deploy .next
-```
 
 ---
 
