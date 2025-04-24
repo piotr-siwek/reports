@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && rm -rf .next/cache",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
@@ -14,8 +14,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "cloudflare:dev": "wrangler pages dev --compatibility-date=2024-07-29 .next",
-    "cloudflare:deploy": "wrangler pages deploy .next --branch main",
-    "cloudflare:validate": "wrangler pages validate"
+    "cloudflare:deploy": "wrangler pages deploy .next --branch main"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -26,7 +25,6 @@
     "@react-pdf/renderer": "^4.3.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.39.7",
-    "@types/jspdf": "^1.3.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

@@ -6,14 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { Home, User, LogOut } from 'lucide-react';
 
-export default async function ProtectedLayout({ 
-  children 
-}: { 
-  children: React.ReactNode 
+export default async function ProtectedLayout({
+  children
+}: {
+  children: React.ReactNode
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  console.log('user', user);
 
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
@@ -27,7 +26,7 @@ export default async function ProtectedLayout({
             </Button>
           </Link>
         </nav>
-        
+
         <div className="mt-auto flex flex-col gap-4">
           {user && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -44,7 +43,7 @@ export default async function ProtectedLayout({
         </div>
       </aside>
 
-      <main className="flex flex-1 flex-col p-6 md:ml-64">
+      <main className="flex flex-1 flex-col p-6">
         {children}
       </main>
       
