@@ -33,7 +33,7 @@ const reportService = {
       original_text?: string | null;
       summary?: string | null;
       conclusions?: string | string[] | null;
-      key_data?: string | null;
+      key_data?: string | string[] | null;
       updated_at: string;
     } = {
       updated_at: new Date().toISOString()
@@ -42,8 +42,20 @@ const reportService = {
     if (data.title !== undefined) updateData.title = data.title;
     if (data.originalText !== undefined) updateData.original_text = data.originalText;
     if (data.summary !== undefined) updateData.summary = data.summary;
-    if (data.conclusions !== undefined) updateData.conclusions = data.conclusions;
-    if (data.keyData !== undefined) updateData.key_data = data.keyData;
+    
+    // Format conclusions for DB if it's an array
+    if (data.conclusions !== undefined) {
+      updateData.conclusions = Array.isArray(data.conclusions) 
+        ? data.conclusions.join('\n- ') 
+        : data.conclusions;
+    }
+    
+    // Format keyData for DB if it's an array
+    if (data.keyData !== undefined) {
+      updateData.key_data = Array.isArray(data.keyData) 
+        ? data.keyData.join('\n- ') 
+        : data.keyData;
+    }
     
     // Update the report
     const { data: updatedReport, error } = await supabase
@@ -98,8 +110,8 @@ const reportService = {
 const reportEditSchemaServer = z.object({
   title: z.string().min(1, "Tytuł jest wymagany.").max(255, "Tytuł jest za długi."),
   summary: z.string().max(10000, "Streszczenie jest za długie (max 10000 znaków).").optional(),
-  conclusions: z.string().max(10000, "Wnioski są za długie (max 10000 znaków).").optional(),
-  keyData: z.string().max(10000, "Kluczowe dane są za długie (max 10000 znaków).").optional(),
+  conclusions: z.string().max(10000, "Wnioski są za długie (max 10000 znaków)").or(z.array(z.string())).optional(),
+  keyData: z.string().max(10000, "Kluczowe dane są za długie (max 10000 znaków)").or(z.array(z.string())).optional(),
 });
 // type ReportEditFormViewModel = z.infer<typeof reportEditSchemaServer>; // Removed unused type
 
@@ -149,8 +161,22 @@ export async function updateReportAction(
 
   // Sanitize HTML content before sending to the backend/service
   const cleanSummary = purify.sanitize(validatedData.summary || '');
-  const cleanConclusions = purify.sanitize(validatedData.conclusions || '');
-  const cleanKeyData = purify.sanitize(validatedData.keyData || '');
+
+  // Handle conclusions that can be string or array
+  let cleanConclusions: string | string[];
+  if (Array.isArray(validatedData.conclusions)) {
+    cleanConclusions = validatedData.conclusions.map(item => purify.sanitize(item));
+  } else {
+    cleanConclusions = purify.sanitize(validatedData.conclusions || '');
+  }
+
+  // Handle keyData that can be string or array
+  let cleanKeyData: string | string[];
+  if (Array.isArray(validatedData.keyData)) {
+    cleanKeyData = validatedData.keyData.map(item => purify.sanitize(item));
+  } else {
+    cleanKeyData = purify.sanitize(validatedData.keyData || '');
+  }
 
   try {
     const userId = await getUserIdServer();

@@ -15,7 +15,7 @@ interface ReportDocumentProps {
   title: string;
   summary: string;
   conclusions: string | string[];
-  keyData: string;
+  keyData: string | string[];
 }
 
 // Style dla dokumentu PDF
@@ -65,13 +65,32 @@ const styles = StyleSheet.create({
   },
 });
 
+// Helper to convert comma-separated string to array
+const processStringContent = (content: string | string[]): string | string[] => {
+  if (Array.isArray(content)) return content;
+  
+  // If it's a comma-separated string without line breaks, convert to array
+  if (content.includes(',') && !content.includes('\n')) {
+    return content.split(',')
+      .map(item => item.trim())
+      .filter(item => item.length > 0);
+  }
+  
+  return content;
+};
+
 // Komponent ReportDocument
 const ReportDocument: React.FC<ReportDocumentProps> = ({
                                                          title,
                                                          summary,
                                                          conclusions,
                                                          keyData,
-                                                       }) => (
+                                                       }) => {
+  // Process conclusions and keyData to handle comma-separated strings
+  const processedConclusions = processStringContent(conclusions);
+  const processedKeyData = processStringContent(keyData);
+  
+  return (
     <Document>
       <Page style={styles.page}>
         <Text style={styles.title}>{title || 'Niezatytułowany Raport'}</Text>
@@ -84,11 +103,11 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({
         <View style={styles.section}>
           <Text style={styles.header}>Wnioski:</Text>
           {
-            typeof conclusions === 'string' ? (
-              <Text style={styles.text}>{conclusions}</Text>
+            typeof processedConclusions === 'string' ? (
+              <Text style={styles.text}>{processedConclusions}</Text>
             ) : (
-              conclusions.map((item, idx) => (
-                <Text key={idx} style={styles.listItem}>• {item}</Text>
+              processedConclusions.map((item, idx) => (
+                <Text key={idx} style={styles.listItem}>- {item}</Text>
               ))
             )
           }
@@ -96,10 +115,19 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({
 
         <View style={styles.section}>
           <Text style={styles.header}>Kluczowe Dane:</Text>
-          <Text style={styles.text}>{keyData}</Text>
+          {
+            typeof processedKeyData === 'string' ? (
+              <Text style={styles.text}>{processedKeyData}</Text>
+            ) : (
+              processedKeyData.map((item, idx) => (
+                <Text key={idx} style={styles.listItem}>- {item}</Text>
+              ))
+            )
+          }
         </View>
       </Page>
     </Document>
-);
+  );
+};
 
 export default ReportDocument;

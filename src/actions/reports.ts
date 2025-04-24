@@ -24,7 +24,7 @@ import { createClient } from '@/lib/supabase-server';
 const OpenAIResponseSchema = z.object({
   summary: z.string(),
   conclusions: z.string().or(z.array(z.string())),
-  keyData: z.string(),
+  keyData: z.string().or(z.array(z.string())),
 });
 
 export async function generateReportPreview(
@@ -47,13 +47,13 @@ export async function generateReportPreview(
   You are an analytical assistant. Your task is to analyze the text below and RETURN A SINGLE VALID JSON OBJECT with exactly three keys:
     1. "summary" (string) — a concise, coherent summary of the entire text.
     2. "conclusions" (array[string]) — a list of discrete, key conclusions drawn from the text.
-    3. "keyData" (array[string]) — every critical data point, each formatted as "context – value" (e.g., "jacket – 500 PLN").
+    3. "keyData" (array[string]) — every critical data point as a list of separate items.
   
   === SECTION 2: MANDATORY CONTENT ===
   You MUST NOT OMIT any information about:
     • Dates: exact days, months, years, or time ranges  
     • Amounts: quantities, currencies, units  
-    • Tasks & Actions: “what needs to be done”  
+    • Tasks & Actions: "what needs to be done"  
     • Decisions: what decisions remain to be made  
     • Deadlines: final dates or timeframes  
     • Responsibilities: people, departments, or roles in charge  
@@ -61,7 +61,7 @@ export async function generateReportPreview(
     • Reference IDs: numbers, codes, or identifiers  
     • Conditions & Requirements: execution criteria, prerequisites, or KPIs  
   
-  Each item in **keyData** must include its full context.  
+  Each item in **keyData** array must include its full context.  
   For example:  
     - "project deadline – 30 April 2025" 
     - "budget increase request – 200 000 EUR"  
@@ -75,7 +75,8 @@ export async function generateReportPreview(
   **IMPORTANT NOTES:**  
   1. **ONLY** output the JSON object—no extra comments, no wrapper text.  
   2. The JSON MUST be syntactically valid.  
-  3. The JSON values (strings, arrays) MUST be in Polish.`;
+  3. The JSON values (strings, arrays) MUST be in Polish.
+  4. keyData must be an array of strings, NOT a single string.`;
   
 
   
@@ -122,19 +123,28 @@ export async function generateReportPreview(
       console.error("OpenAI response validation failed AFTER prompt update:", validationResult.error.errors, parsedContentJson);
       const keyDataError = validationResult.error.errors.find(e => e.path.includes('keyData'));
       if (keyDataError) {
-           return { success: false, error: `AI zwróciło nieprawidłowy format dla Kluczowych Danych (oczekiwano tekstu): ${keyDataError.message}` };
+           return { success: false, error: `AI zwróciło nieprawidłowy format dla Kluczowych Danych: ${keyDataError.message}` };
       }
       return { success: false, error: "AI zwróciło niekompletne lub nieprawidłowe dane." };
     }
 
     // Normalize the conclusions field to an array
     const rawConclusions = validationResult.data.conclusions;
-    const conclusionsArray = Array.isArray(rawConclusions) ? rawConclusions : [rawConclusions];
+    const conclusionsArray = Array.isArray(rawConclusions) 
+      ? rawConclusions.map(item => item.startsWith('-') ? item : `${item}`) 
+      : [rawConclusions];
+    
+    // Normalize the keyData field to an array
+    const rawKeyData = validationResult.data.keyData;
+    const keyDataArray = Array.isArray(rawKeyData) 
+      ? rawKeyData.map(item => item.startsWith('-') ? item : `${item}`) 
+      : [rawKeyData];
+    
     const previewData: ReportPreviewDto = {
       originalText: command.originalText,
       summary: validationResult.data.summary,
       conclusions: conclusionsArray,
-      keyData: validationResult.data.keyData,
+      keyData: keyDataArray,
     };
 
     return { success: true, data: previewData };
@@ -164,7 +174,10 @@ export async function saveReport(
       z.string().min(1, "Wnioski są wymagane."),
       z.array(z.string()).min(1, "Wnioski są wymagane.")
     ]),
-    keyData: z.string().min(1, "Kluczowe dane są wymagane."),
+    keyData: z.union([
+      z.string().min(1, "Kluczowe dane są wymagane."),
+      z.array(z.string()).min(1, "Kluczowe dane są wymagane.")
+    ]),
   }).safeParse(command);
 
   if (!validation.success) {
@@ -196,14 +209,30 @@ export async function saveReport(
     ? command.conclusions.join('\n- ') 
     : command.conclusions;
 
+  // Normalize keyData format if it's an array
+  const keyDataForDB = Array.isArray(command.keyData) 
+    ? command.keyData.join('\n- ') 
+    : command.keyData;
+
+  // Ensure the first item has a dash if it doesn't already
+  let formattedConclusions = conclusionsForDB;
+  if (formattedConclusions && !formattedConclusions.startsWith('-') && formattedConclusions.includes('\n-')) {
+    formattedConclusions = '- ' + formattedConclusions;
+  }
+  
+  let formattedKeyData = keyDataForDB;
+  if (formattedKeyData && !formattedKeyData.startsWith('-') && formattedKeyData.includes('\n-')) {
+    formattedKeyData = '- ' + formattedKeyData;
+  }
+
   // Prepare data for insertion using the user ID directly
   const reportDataToInsert = {
     user_id: userId, // Use the Supabase auth user ID directly
     title: command.title.trim(),
     original_text: command.originalText,
     summary: command.summary.trim(),
-    conclusions: conclusionsForDB,
-    key_data: command.keyData.trim(),
+    conclusions: formattedConclusions,
+    key_data: formattedKeyData,
   };
 
   try {

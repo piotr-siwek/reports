@@ -37,6 +37,48 @@ async function getReportDetails(id: number, userId: string): Promise<ReportDto |
   
   if (!data) return null;
   
+  // Parse conclusions to array
+  let conclusionsData: string | string[] = data.conclusions || '';
+  // Check if it's a comma-separated list
+  if (typeof conclusionsData === 'string') {
+    if (conclusionsData.includes('\n-')) {
+      // Handle newline with dash format
+      const lines = conclusionsData.split('\n-').map(line => line.trim());
+      const firstLine = lines.shift() || '';
+      const firstItem = firstLine.startsWith('-') ? 
+        firstLine.substring(1).trim() : firstLine;
+      
+      conclusionsData = firstItem ? [firstItem] : [];
+      conclusionsData.push(...lines.filter(line => line));
+    } else if (conclusionsData.includes(',')) {
+      // Handle comma-separated format
+      conclusionsData = conclusionsData.split(',')
+        .map(item => item.trim())
+        .filter(item => item.length > 0);
+    }
+  }
+  
+  // Parse key_data to array
+  let keyDataValue: string | string[] = data.key_data || '';
+  // Check if it's a comma-separated list
+  if (typeof keyDataValue === 'string') {
+    if (keyDataValue.includes('\n-')) {
+      // Handle newline with dash format
+      const lines = keyDataValue.split('\n-').map(line => line.trim());
+      const firstLine = lines.shift() || '';
+      const firstItem = firstLine.startsWith('-') ? 
+        firstLine.substring(1).trim() : firstLine;
+      
+      keyDataValue = firstItem ? [firstItem] : [];
+      keyDataValue.push(...lines.filter(line => line));
+    } else if (keyDataValue.includes(',')) {
+      // Handle comma-separated format
+      keyDataValue = keyDataValue.split(',')
+        .map(item => item.trim())
+        .filter(item => item.length > 0);
+    }
+  }
+  
   // Map database fields to DTO format
   return {
     id: data.id,
@@ -44,8 +86,8 @@ async function getReportDetails(id: number, userId: string): Promise<ReportDto |
     title: data.title || '',
     originalText: data.original_text || '',
     summary: data.summary || '',
-    conclusions: data.conclusions || '',
-    keyData: data.key_data || '',
+    conclusions: conclusionsData,
+    keyData: keyDataValue,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
   };

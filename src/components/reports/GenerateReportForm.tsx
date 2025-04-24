@@ -44,15 +44,49 @@ export default function GenerateReportForm() {
         // Log successful generation
         console.log('Generated Report Data:', result.data);
 
-        // Store the generated content
-        setGeneratedContent(result.data);
+        // Process data to ensure correct formatting
+        // Ensure conclusions are properly formatted
+        let formattedConclusions = result.data.conclusions;
+        if (Array.isArray(formattedConclusions)) {
+          // Make sure each item doesn't start with a dash (will be added by the display formatter)
+          formattedConclusions = formattedConclusions.map(item => 
+            item.startsWith('-') ? item.substring(1).trim() : item
+          );
+        } else if (typeof formattedConclusions === 'string' && formattedConclusions.includes(',')) {
+          // Split comma-separated into array
+          formattedConclusions = formattedConclusions
+            .split(',')
+            .map(item => item.trim())
+            .filter(item => item.length > 0);
+        }
+
+        // Ensure keyData is properly formatted
+        let formattedKeyData = result.data.keyData;
+        if (Array.isArray(formattedKeyData)) {
+          // Make sure each item doesn't start with a dash (will be added by the display formatter)
+          formattedKeyData = formattedKeyData.map(item => 
+            item.startsWith('-') ? item.substring(1).trim() : item
+          );
+        } else if (typeof formattedKeyData === 'string' && formattedKeyData.includes(',')) {
+          // Split comma-separated into array
+          formattedKeyData = formattedKeyData
+            .split(',')
+            .map(item => item.trim())
+            .filter(item => item.length > 0);
+        }
+
+        // Store the generated content with properly formatted data
+        setGeneratedContent({
+          ...result.data,
+          conclusions: formattedConclusions,
+          keyData: formattedKeyData
+        });
         
         // Update editor content with generated data
-        // Make a direct copy to ensure we pass the exact data format
         setEditorContent({
           summary: result.data.summary,
-          conclusions: result.data.conclusions,
-          keyData: result.data.keyData
+          conclusions: formattedConclusions,
+          keyData: formattedKeyData
         });
         
         // Default title from first sentence of summary (up to 50 chars)
@@ -65,8 +99,8 @@ export default function GenerateReportForm() {
         console.log('Toast placeholder: Podgląd raportu wygenerowany!');
         console.log('Editor content after generation:', {
           summary: result.data.summary,
-          conclusions: result.data.conclusions,
-          keyData: result.data.keyData
+          conclusions: formattedConclusions,
+          keyData: formattedKeyData
         });
       } else {
         setGenerateError(result.error || 'Nieznany błąd podczas generowania.');
@@ -121,7 +155,12 @@ export default function GenerateReportForm() {
       return;
     }
 
-    if (!editorContent.keyData.trim()) {
+    // For keyData - handle both string and array types
+    const hasKeyData = typeof editorContent.keyData === 'string' 
+      ? editorContent.keyData.trim().length > 0
+      : Array.isArray(editorContent.keyData) && editorContent.keyData.length > 0;
+    
+    if (!hasKeyData) {
       setSaveError("Kluczowe Dane nie mogą być puste.");
       return;
     }
@@ -226,9 +265,9 @@ export default function GenerateReportForm() {
               document={
                 <ReportDocument
                   title={title}
-                  summary={generatedContent.summary}
-                  conclusions={generatedContent.conclusions}
-                  keyData={generatedContent.keyData}
+                  summary={editorContent.summary}
+                  conclusions={editorContent.conclusions}
+                  keyData={editorContent.keyData}
                 />
               }
               fileName={(title || 'raport').replace(/[^a-z0-9\-_]/gi, '_') + '.pdf'}

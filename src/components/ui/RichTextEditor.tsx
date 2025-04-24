@@ -7,7 +7,7 @@ import { ReportPreviewDto } from '@/types'; // Using @ alias assuming it maps to
 export interface EditorContent {
   summary: string;
   conclusions: string | string[];
-  keyData: string;
+  keyData: string | string[];
 }
 
 interface RichTextEditorProps {
@@ -16,12 +16,23 @@ interface RichTextEditorProps {
   readOnly?: boolean;
 }
 
-// Format conclusions for display, handling both string and array
-const formatConclusionsForDisplay = (conclusions: string | string[] | undefined): string => {
-  if (!conclusions) return '';
-  if (typeof conclusions === 'string') return conclusions;
-  // Format array as bullet points
-  return conclusions.join('\n- ');
+// Format array values for display, handling both string and array
+const formatArrayForDisplay = (value: string | string[] | undefined): string => {
+  if (!value) return '';
+  
+  // If it's already an array, format it with dashes
+  if (Array.isArray(value)) {
+    return '- ' + value.join('\n- ');
+  }
+  
+  // If it's a string with commas, convert to bullet points
+  if (typeof value === 'string' && value.includes(',') && !value.includes('\n')) {
+    const items = value.split(',').map(item => item.trim()).filter(item => item);
+    return '- ' + items.join('\n- ');
+  }
+  
+  // If it's already properly formatted with newlines or it's a simple string
+  return value;
 };
 
 // Basic placeholder Rich Text Editor using textareas
@@ -35,19 +46,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
     if (initialContent) {
       console.log("RichTextEditor received initialContent:", initialContent);
       const summaryValue = initialContent.summary || '';
-      const formattedConclusions = formatConclusionsForDisplay(initialContent.conclusions);
-      const keyDataValue = initialContent.keyData || '';
+      const formattedConclusions = formatArrayForDisplay(initialContent.conclusions);
+      const formattedKeyData = formatArrayForDisplay(initialContent.keyData);
       
       setSummary(summaryValue);
       setConclusions(formattedConclusions);
-      setKeyData(keyDataValue);
+      setKeyData(formattedKeyData);
       
       // Immediately notify parent component of content changes
       onChange({
         summary: summaryValue,
         // Keep original format for data model (string or array)
         conclusions: initialContent.conclusions || '',
-        keyData: keyDataValue
+        keyData: initialContent.keyData || ''
       });
     } else {
       // Clear fields if initialContent is null
@@ -57,33 +68,56 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
     }
   }, [initialContent, onChange]);
 
-  // Handle user changes to conclusions text
-  const handleConclusionsChange = (text: string) => {
-    setConclusions(text);
+  // Convert textarea text with bullets to array
+  const textToArray = (text: string): string | string[] => {
+    // Add dash to first line if it doesn't have one and there are line breaks
+    if (text.includes('\n') && !text.startsWith('-')) {
+      text = '- ' + text;
+    }
     
     // If text contains line breaks with bullet points, convert to array
     if (text.includes('\n-')) {
       const lines = text.split('\n-').map(line => line.trim());
-      // First line doesn't have a bullet
+      // First line might have a dash when split
       const firstLine = lines.shift() || '';
-      // If first line is not empty, add it as first item
-      const conclusionsArray = firstLine ? [firstLine] : [];
-      // Add the rest (which had bullet points)
-      conclusionsArray.push(...lines.filter(line => line));
+      const firstItem = firstLine.startsWith('-') ? 
+        firstLine.substring(1).trim() : firstLine;
       
-      onChange({
-        summary,
-        conclusions: conclusionsArray.length > 0 ? conclusionsArray : text,
-        keyData
-      });
-    } else {
-      // Regular text without bullet points
-      onChange({
-        summary,
-        conclusions: text,
-        keyData
-      });
+      // If first line is not empty, add it as first item
+      const itemsArray = firstItem ? [firstItem] : [];
+      // Add the rest of the items
+      itemsArray.push(...lines.filter(line => line));
+      
+      return itemsArray.length > 0 ? itemsArray : text;
     }
+    
+    // Single line case - remove dash if present and return as array
+    if (text.startsWith('-')) {
+      return [text.substring(1).trim()];
+    }
+    
+    // Regular text without bullet points - return as is
+    return text;
+  };
+
+  // Handle user changes to conclusions text
+  const handleConclusionsChange = (text: string) => {
+    setConclusions(text);
+    onChange({
+      summary,
+      conclusions: textToArray(text),
+      keyData
+    });
+  };
+
+  // Handle user changes to keyData text
+  const handleKeyDataChange = (text: string) => {
+    setKeyData(text);
+    onChange({
+      summary,
+      conclusions,
+      keyData: textToArray(text)
+    });
   };
 
   return (
@@ -128,15 +162,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
         <textarea
           id="keyData"
           value={keyData}
-          onChange={(e) => {
-            const value = e.target.value;
-            setKeyData(value);
-            onChange({ summary, conclusions, keyData: value });
-          }}
+          onChange={(e) => handleKeyDataChange(e.target.value)}
           rows={5}
           className="w-full p-2 border border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-100"
           readOnly={readOnly}
           disabled={readOnly}
+          placeholder="Wpisz kluczowe dane, każda w nowej linii poprzedzona myślnikiem (-)."
         />
       </div>
     </div>
