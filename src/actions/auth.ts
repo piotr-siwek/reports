@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr'; // Import Supabase server client and CookieOptions type
 import { LoginFormSchema, RegisterFormSchema, ResetPasswordConfirmSchema, ResetPasswordRequestSchema } from "@/lib/validators/auth";
 import {createClient} from "@/lib/supabase-server"; // Import both schemas
+import { redirect } from 'next/navigation';
 // import { LoginCommand, LoginResponseDto } from "@/types"; // Removed custom API types
 
 // Type for the state managed by useActionState
@@ -65,7 +66,6 @@ export async function loginUser(
 
   // 2. Proceed with login if validation passes
   const supabase = await createClient();
-console.log('1')
   // Call Supabase sign in
   const { error } = await supabase.auth.signInWithPassword({
     email: validationResult.data.email, // Use validated data
@@ -80,6 +80,7 @@ console.log('1')
     return { success: false, error: error.message || "Wystąpił błąd podczas logowania." };
   }
 
+  redirect("/reports");
   // Login successful
   return { success: true, message: "Zalogowano pomyślnie." };
 

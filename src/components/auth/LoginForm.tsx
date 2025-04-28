@@ -66,9 +66,6 @@ export default function LoginForm() {
             {isPending ? "Logowanie..." : "Zaloguj się"}
           </Button>
           <div className="text-sm w-full flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
-            <Link href="/reset-password" className="underline">
-              Zapomniałeś hasła?
-            </Link>
             <Link href="/register" className="underline">
               Nie masz konta? Zarejestruj się
             </Link>
