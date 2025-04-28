@@ -44,32 +44,12 @@ function formatForDisplay(text: string | string[] | null | undefined): string {
   return '';
 }
 
-// Format the content back to array when submitting
-function parseForSubmission(text: string | string[] | undefined): string[] {
-  if (!text) return [];
-  
-  if (Array.isArray(text)) {
-    return text.filter(Boolean);
-  }
-  
-  if (!text.trim()) return [];
-  
-  return text
-    .split('\n')
-    .map(line => {
-      const trimmed = line.trim();
-      // Remove dash prefix if present
-      return trimmed.startsWith('-') ? trimmed.substring(1).trim() : trimmed;
-    })
-    .filter(Boolean);
-}
-
 // Zod Schema defined in the plan
 const reportEditSchema = z.object({
   title: z.string().min(1, "Tytuł jest wymagany.").max(255, "Tytuł jest za długi."),
   summary: z.string().max(10000, "Streszczenie jest za długie (max 10000 znaków).").optional(), // Optional in form state, handled by editor
   conclusions: z.string().max(10000, "Wnioski są za długie (max 10000 znaków).").or(z.array(z.string())).optional(),
-  keyData: z.string().max(10000, "Kluczowe dane są za długie (max 10000 znaków).").optional(),
+  keyData: z.string().max(10000, "Kluczowe dane są za długie (max 10000 znaków).").or(z.array(z.string())).optional(),
 });
 
 // Infer the form view model type from the schema
@@ -111,6 +91,7 @@ const ReportEditForm = ({ initialData }: ReportEditFormProps) => {
     },
     mode: 'onChange', // Validate on change for better UX
   });
+  console.log({formattedConclusions, formattedKeyData})
 
   const { handleSubmit, control, setError, formState: { isDirty, isValid } } = form;
 
@@ -149,12 +130,12 @@ const ReportEditForm = ({ initialData }: ReportEditFormProps) => {
     
     if (data.conclusions) {
       // Convert array to JSON string for FormData
-      formData.append('conclusions', JSON.stringify(parseForSubmission(data.conclusions)));
+      formData.append('conclusions', data.conclusions as string);
     }
     
     if (data.keyData) {
       // Convert array to JSON string for FormData
-      formData.append('keyData', JSON.stringify(parseForSubmission(data.keyData)));
+      formData.append('keyData', data.keyData as string);
     }
     
     startUpdateTransition(() => {
