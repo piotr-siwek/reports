@@ -6,7 +6,7 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import ReportDocument from './ReportDocument';
 
 import { generateReportPreview, saveReport } from '../../actions/reports';
-import { ReportPreviewDto, CreateReportCommand, GenerateReportCommand } from '../../types';
+import { ReportGenerateDto, CreateReportCommand, GenerateReportCommand } from '../../types';
 // import { useToast } from '@/components/ui/use-toast';
 import LoadingIndicator from '../ui/LoadingIndicator';
 import RichTextEditor, { EditorContent } from '../ui/RichTextEditor';
@@ -14,7 +14,7 @@ import RichTextEditor, { EditorContent } from '../ui/RichTextEditor';
 export default function GenerateReportForm() {
   const [sourceText, setSourceText] = useState('');
   const [generateError, setGenerateError] = useState<string | null>(null);
-  const [generatedContent, setGeneratedContent] = useState<ReportPreviewDto | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<ReportGenerateDto | null>(null);
   const [title, setTitle] = useState('');
   const [editorContent, setEditorContent] = useState<EditorContent>({ summary: '', conclusions: '', keyData: '' });
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -52,28 +52,19 @@ export default function GenerateReportForm() {
           formattedConclusions = formattedConclusions.map(item => 
             item.startsWith('-') ? item.substring(1).trim() : item
           );
-        } else if (typeof formattedConclusions === 'string' && formattedConclusions.includes(',')) {
-          // Split comma-separated into array
-          formattedConclusions = formattedConclusions
-            .split(',')
-            .map(item => item.trim())
-            .filter(item => item.length > 0);
         }
 
         // Ensure keyData is properly formatted
         let formattedKeyData = result.data.keyData;
+        console.log("@", result.data.keyData)
         if (Array.isArray(formattedKeyData)) {
           // Make sure each item doesn't start with a dash (will be added by the display formatter)
           formattedKeyData = formattedKeyData.map(item => 
             item.startsWith('-') ? item.substring(1).trim() : item
-          );
-        } else if (typeof formattedKeyData === 'string' && formattedKeyData.includes(',')) {
-          // Split comma-separated into array
-          formattedKeyData = formattedKeyData
-            .split(',')
-            .map(item => item.trim())
-            .filter(item => item.length > 0);
+          ) as string[];
+          console.log({formattedKeyData})
         }
+      
 
         // Store the generated content with properly formatted data
         setGeneratedContent({

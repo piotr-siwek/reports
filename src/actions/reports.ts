@@ -3,10 +3,10 @@
 import { z } from 'zod';
 import {
   GenerateReportCommand,
-  ReportPreviewDto,
   CreateReportCommand,
   CreateReportResponseDto,
   ReportDto,
+  ReportGenerateDto,
 } from '@/types';
 // Use correct Supabase client import
 import { createClient } from '@/lib/supabase-server';
@@ -29,7 +29,7 @@ const OpenAIResponseSchema = z.object({
 
 export async function generateReportPreview(
   command: GenerateReportCommand
-): Promise<{ success: boolean; data?: ReportPreviewDto; error?: string }> {
+): Promise<{ success: boolean; data?: ReportGenerateDto; error?: string }> {
   const validation = z.object({ originalText: z.string().min(100) }).safeParse(command);
 
   if (!validation.success) {
@@ -140,7 +140,7 @@ export async function generateReportPreview(
       ? rawKeyData.map(item => item.startsWith('-') ? item : `${item}`) 
       : [rawKeyData];
     
-    const previewData: ReportPreviewDto = {
+    const previewData: ReportGenerateDto = {
       originalText: command.originalText,
       summary: validationResult.data.summary,
       conclusions: conclusionsArray,

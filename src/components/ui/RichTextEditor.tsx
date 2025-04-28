@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ReportPreviewDto } from '@/types'; // Using @ alias assuming it maps to src/
+import { ReportGenerateDto } from '@/types'; // Using @ alias assuming it maps to src/
 
 // Define the structure for the content being edited
 export interface EditorContent {
@@ -11,7 +11,7 @@ export interface EditorContent {
 }
 
 interface RichTextEditorProps {
-  initialContent: ReportPreviewDto | null;
+  initialContent: ReportGenerateDto | null;
   onChange: (content: EditorContent) => void;
   readOnly?: boolean;
 }

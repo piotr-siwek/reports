@@ -98,13 +98,20 @@ export interface ReportPreviewDto {
   keyData: string;
 }
 
+export interface ReportGenerateDto {
+  originalText: string;
+  summary: string;
+  conclusions: string[];
+  keyData: string[];
+}
+
 // Command for creating/saving a report
 export interface CreateReportCommand {
   title: NonNullable<TablesInsert<'reports'>['title']>;
   originalText: NonNullable<TablesInsert<'reports'>['original_text']>;
   summary: NonNullable<TablesInsert<'reports'>['summary']>;
   conclusions: NonNullable<TablesInsert<'reports'>['conclusions']> | string[];
-  keyData: NonNullable<TablesInsert<'reports'>['key_data']>;
+  keyData: NonNullable<TablesInsert<'reports'>['key_data']> | string[];
 }
 
 // DTO representing a full report (camelCase), derived from DB row
@@ -151,8 +158,8 @@ export interface UpdateReportCommand {
   title?: TablesUpdate<'reports'>['title'];
   originalText?: TablesUpdate<'reports'>['original_text'];
   summary?: TablesUpdate<'reports'>['summary'];
-  conclusions?: TablesUpdate<'reports'>['conclusions'];
-  keyData?: TablesUpdate<'reports'>['key_data'];
+  conclusions?: TablesUpdate<'reports'>['conclusions'] | string[];
+  keyData?: TablesUpdate<'reports'>['key_data'] | string[];
 }
 
 // Response DTO for updating a report
