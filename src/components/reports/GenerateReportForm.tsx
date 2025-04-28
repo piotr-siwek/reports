@@ -169,6 +169,24 @@ export default function GenerateReportForm() {
     });
   };
 
+  // Funkcja pomocnicza: zawsze zwraca tablicę stringów
+  function ensureStringArray(val: unknown): string[] {
+    if (Array.isArray(val)) return val.map(String);
+    if (typeof val === 'string') return val.split('\n').map(s => s.trim()).filter(Boolean);
+    if (val == null) return [];
+    // Spróbuj obsłużyć przypadek, gdy ktoś przekazał obiekt
+    try {
+      return Object.values(val as Record<string, unknown>).map(String);
+    } catch {
+      return [String(val)];
+    }
+  }
+
+  // DEBUG: log przekazywanych danych do PDF
+  const debugConclusions = ensureStringArray(editorContent.conclusions);
+  const debugKeyData = ensureStringArray(editorContent.keyData);
+  // console.log('PDFDownloadLink debug:', { title, summary: editorContent.summary, conclusions: debugConclusions, keyData: debugKeyData });
+
   return (
     <div className="space-y-6">
       {/* Section 1: Source Text Input */}
@@ -253,12 +271,13 @@ export default function GenerateReportForm() {
             </button>
             {/* PDF Download Button replaced with PDFDownloadLink from react-pdf */}
             <PDFDownloadLink
+              key={JSON.stringify({ title, summary: editorContent.summary, conclusions: debugConclusions, keyData: debugKeyData })}
               document={
                 <ReportDocument
                   title={title}
                   summary={editorContent.summary}
-                  conclusions={editorContent.conclusions}
-                  keyData={editorContent.keyData}
+                  conclusions={debugConclusions}
+                  keyData={debugKeyData}
                 />
               }
               fileName={(title || 'raport').replace(/[^a-z0-9\-_]/gi, '_') + '.pdf'}
