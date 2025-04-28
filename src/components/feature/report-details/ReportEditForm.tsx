@@ -8,6 +8,8 @@ import { useEffect, useState, useTransition } from 'react';
 import { useFormState } from 'react-dom';
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import ReportDocument from '@/components/reports/ReportDocument';
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,6 +96,17 @@ const ReportEditForm = ({ initialData }: ReportEditFormProps) => {
   console.log({formattedConclusions, formattedKeyData})
 
   const { handleSubmit, control, setError, formState: { isDirty, isValid } } = form;
+
+  // Dodany stan do wymuszenia rerenderu PDFDownloadLink
+  const [pdfKey, setPdfKey] = useState(0);
+
+  // Nasłuchuj na zmiany w formularzu i aktualizuj pdfKey
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      setPdfKey(k => k + 1);
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   // Effect to handle action results (toasts, errors)
   useEffect(() => {
@@ -244,6 +257,30 @@ const ReportEditForm = ({ initialData }: ReportEditFormProps) => {
               >
                   {isDeleting ? "Usuwanie..." : "Usuń Raport"}
               </Button>
+              {/* PDF Download Button */}
+              <PDFDownloadLink
+                key={pdfKey}
+                document={
+                  <ReportDocument
+                    title={form.getValues('title') || ''}
+                    summary={form.getValues('summary') || ''}
+                    conclusions={form.getValues('conclusions') || ''}
+                    keyData={form.getValues('keyData') || ''}
+                  />
+                }
+                fileName={(form.getValues('title') || 'raport').replace(/[^a-z0-9\-_]/gi, '_') + '.pdf'}
+              >
+                {({ loading }) => (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={loading}
+                    className="ml-2"
+                  >
+                    {loading ? "Tworzenie PDF..." : "Pobierz PDF"}
+                  </Button>
+                )}
+              </PDFDownloadLink>
           </CardFooter>
         </form>
       </Form>
