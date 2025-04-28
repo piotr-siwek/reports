@@ -84,20 +84,20 @@ async function getReportDetails(id: number, userId: string): Promise<ReportDto |
     originalText: data.original_text || '',
     summary: data.summary || '',
     conclusions: conclusionsData,
-    keyData: keyDataValue,
+    keyData: typeof keyDataValue === 'string' ? keyDataValue : keyDataValue.join('\n- '),
     createdAt: data.created_at,
     updatedAt: data.updated_at,
   };
 }
 
 interface ReportDetailsPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function ReportDetailsPage({ params }: ReportDetailsPageProps) {
-  const reportId = parseInt(params.id, 10);
+  const reportId = parseInt((await params).id, 10);
 
   // Validate ID
   if (isNaN(reportId)) {
