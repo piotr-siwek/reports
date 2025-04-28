@@ -17,11 +17,9 @@ Użytkownicy potrzebują narzędzia, które zautomatyzuje proces analizy tekstó
 1. System kont użytkowników
    - Rejestracja i logowanie użytkowników
    - Przechowywanie raportów w ramach konta użytkownika
-   - Zarządzanie profilem użytkownika
 
 2. Wprowadzanie tekstu źródłowego
    - Interfejs do ręcznego wprowadzania tekstu (kopiuj-wklej)
-   - Sprawdzanie poprawności i kompletności wprowadzonego tekstu
 
 3. Generowanie raportów
    - Automatyczne generowanie raportów przez AI na podstawie wprowadzonego tekstu
@@ -31,12 +29,10 @@ Użytkownicy potrzebują narzędzia, które zautomatyzuje proces analizy tekstó
 4. Edycja raportów
    - Interfejs do edycji wygenerowanych raportów przed zapisaniem
    - Możliwość modyfikacji poszczególnych sekcji raportu
-   - Zachowanie wersji oryginalnej i edytowanej
 
 5. Zarządzanie historią raportów
    - Widok listy wszystkich raportów użytkownika
    - Możliwość przeglądania, edycji i usuwania zapisanych raportów
-   - Sortowanie i filtrowanie raportów
 
 ## 4. Granice produktu
 Funkcje, które NIE wchodzą w zakres pierwszej wersji produktu:
@@ -59,7 +55,6 @@ Jako nowy użytkownik, chcę założyć konto w systemie, aby mieć dostęp do f
 - Formularz rejestracji zawiera pola: email, hasło, potwierdzenie hasła
 - System waliduje poprawność adresu email
 - System wymaga hasła o minimalnej długości 8 znaków
-- Po rejestracji użytkownik otrzymuje powiadomienie o sukcesie
 - Użytkownik może zalogować się używając utworzonych danych
 
 ### US-002: Logowanie do systemu
@@ -69,18 +64,8 @@ Jako zarejestrowany użytkownik, chcę zalogować się do systemu, aby uzyskać 
 - System weryfikuje poprawność danych logowania
 - Po poprawnym zalogowaniu użytkownik jest przekierowany do widoku głównego aplikacji
 - W przypadku błędnych danych system wyświetla odpowiedni komunikat
-- Dostępna jest opcja "Zapomniałem hasła"
 
-### US-003: Odzyskiwanie hasła
-Jako użytkownik, który zapomniał hasła, chcę zresetować hasło, aby odzyskać dostęp do swojego konta.
-#### Kryteria akceptacji:
-- Formularz zawiera pole do wprowadzenia adresu email
-- System wysyła link do resetowania hasła na podany adres email
-- Link do resetowania hasła wygasa po 24 godzinach
-- Po kliknięciu w link użytkownik może ustawić nowe hasło
-- System potwierdza zmianę hasła
-
-### US-004: Wprowadzanie tekstu źródłowego
+### US-003: Wprowadzanie tekstu źródłowego
 Jako zalogowany użytkownik, chcę wprowadzić tekst źródłowy do systemu, aby wygenerować na jego podstawie raport.
 #### Kryteria akceptacji:
 - Dostępne jest pole tekstowe do wprowadzenia tekstu (min. 100 znaków)
@@ -88,7 +73,7 @@ Jako zalogowany użytkownik, chcę wprowadzić tekst źródłowy do systemu, aby
 - Dostępny jest przycisk "Generuj raport"
 - System wyświetla komunikat w przypadku zbyt krótkiego tekstu
 
-### US-005: Generowanie raportu
+### US-004: Generowanie raportu
 Jako zalogowany użytkownik, chcę automatycznie wygenerować raport na podstawie wprowadzonego tekstu, aby zaoszczędzić czas na jego ręcznym tworzeniu.
 #### Kryteria akceptacji:
 - System generuje raport po kliknięciu przycisku "Generuj raport"
@@ -97,16 +82,15 @@ Jako zalogowany użytkownik, chcę automatycznie wygenerować raport na podstawi
 - System informuje o zakończeniu generowania
 - Wygenerowany raport jest wyświetlany użytkownikowi
 
-### US-006: Edycja wygenerowanego raportu
+### US-005: Edycja wygenerowanego raportu
 Jako zalogowany użytkownik, chcę edytować wygenerowany raport przed zapisaniem, aby dostosować go do moich potrzeb.
 #### Kryteria akceptacji:
 - Każda sekcja raportu posiada opcję edycji
 - Dostępne są podstawowe narzędzia formatowania tekstu
 - System automatycznie zapisuje zmiany w trybie roboczym
 - Dostępny jest przycisk "Zapisz raport"
-- System porównuje wersję oryginalną z edytowaną
 
-### US-007: Zapisywanie raportu
+### US-006: Zapisywanie raportu
 Jako zalogowany użytkownik, chcę zapisać wygenerowany i opcjonalnie edytowany raport, aby móc wrócić do niego w przyszłości.
 #### Kryteria akceptacji:
 - Użytkownik może nadać tytuł raportowi
@@ -114,7 +98,7 @@ Jako zalogowany użytkownik, chcę zapisać wygenerowany i opcjonalnie edytowany
 - System wyświetla potwierdzenie zapisania raportu
 - Zapisany raport pojawia się w historii raportów użytkownika
 
-### US-008: Przeglądanie historii raportów
+### US-007: Przeglądanie historii raportów
 Jako zalogowany użytkownik, chcę przeglądać historię moich raportów, aby mieć dostęp do wcześniej zapisanych dokumentów.
 #### Kryteria akceptacji:
 - System wyświetla listę wszystkich raportów użytkownika
@@ -122,7 +106,7 @@ Jako zalogowany użytkownik, chcę przeglądać historię moich raportów, aby m
 - Raporty są sortowane od najnowszego do najstarszego
 - Użytkownik może filtrować raporty po tytule
 
-### US-009: Wyświetlanie szczegółów raportu
+### US-008: Wyświetlanie szczegółów raportu
 Jako zalogowany użytkownik, chcę wyświetlić pełną treść zapisanego raportu, aby zapoznać się z jego zawartością.
 #### Kryteria akceptacji:
 - System wyświetla pełną treść raportu z podziałem na sekcje
@@ -130,15 +114,13 @@ Jako zalogowany użytkownik, chcę wyświetlić pełną treść zapisanego rapor
 - Dostępne są opcje: edycji, usunięcia i powrotu do listy
 - System umożliwia wydruk raportu
 
-### US-010: Edycja zapisanego raportu
+### US-009: Edycja zapisanego raportu
 Jako zalogowany użytkownik, chcę edytować zapisany wcześniej raport, aby zaktualizować jego treść.
 #### Kryteria akceptacji:
 - System udostępnia interfejs edycji zapisanego raportu
 - Wszystkie sekcje raportu są dostępne do edycji
-- System zapisuje datę ostatniej modyfikacji
-- Dostępna jest opcja anulowania zmian i powrotu do wersji przed edycją
 
-### US-011: Usuwanie raportu
+### US-010: Usuwanie raportu
 Jako zalogowany użytkownik, chcę usunąć niepotrzebny raport, aby utrzymać porządek w mojej historii.
 #### Kryteria akceptacji:
 - System wyświetla prośbę o potwierdzenie usunięcia
@@ -146,46 +128,18 @@ Jako zalogowany użytkownik, chcę usunąć niepotrzebny raport, aby utrzymać p
 - System wyświetla potwierdzenie usunięcia
 - Usunięty raport znika z listy historii
 
-### US-012: Wylogowanie z systemu
+### US-011: Wylogowanie z systemu
 Jako zalogowany użytkownik, chcę wylogować się z systemu, aby zabezpieczyć moje dane.
 #### Kryteria akceptacji:
 - Przycisk wylogowania jest dostępny z każdego widoku aplikacji
 - Po wylogowaniu użytkownik jest przekierowany do strony logowania
-- Sesja użytkownika jest prawidłowo zamykana
-- Dane tymczasowe są usuwane
 
-### US-013: Zmiana hasła
-Jako zalogowany użytkownik, chcę zmienić moje hasło, aby zwiększyć bezpieczeństwo konta.
-#### Kryteria akceptacji:
-- Formularz zawiera pola: aktualne hasło, nowe hasło, potwierdzenie nowego hasła
-- System weryfikuje poprawność aktualnego hasła
-- Nowe hasło musi spełniać wymogi bezpieczeństwa
-- System wyświetla potwierdzenie zmiany hasła
-
-### US-014: Zarządzanie profilem użytkownika
-Jako zalogowany użytkownik, chcę zarządzać informacjami w moim profilu, aby aktualizować moje dane kontaktowe.
-#### Kryteria akceptacji:
-- Użytkownik może edytować swoje dane (imię, nazwisko, email)
-- System waliduje wprowadzone zmiany
-- Zmiana adresu email wymaga potwierdzenia
-- System zapisuje zmiany po zatwierdzeniu przez użytkownika
-
-### US-015: Responsywność interfejsu
-Jako zalogowany użytkownik, chcę korzystać z aplikacji na różnych urządzeniach, aby mieć dostęp do raportów niezależnie od sprzętu.
-#### Kryteria akceptacji:
-- Interfejs poprawnie wyświetla się na komputerach stacjonarnych
-- Interfejs poprawnie wyświetla się na tabletach
-- Interfejs poprawnie wyświetla się na telefonach komórkowych
-- Wszystkie funkcje są dostępne niezależnie od urządzenia
-
-### US-016: User bez konta
+### US-012: User bez konta
 Jako niezalogowany użytkownik, chcę być od razu przekierowany na stronę do logowania
 #### Kryteria akceptacji:
 - Użytkownik niezalogowany nie ma dostępu do platformy
 - Użytkownik niezalogowany może się zalogować
 - Użytkownik niezalogowany może przejść do strony rejestracji
-- Użytkownik niezalogowany może przejść do strony aktualizacji hasła
-- Użytkownik niezalogowany może przejść do strony resetu hasła
 
 ## 6. Metryki sukcesu
 
