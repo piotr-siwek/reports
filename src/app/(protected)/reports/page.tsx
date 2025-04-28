@@ -52,23 +52,6 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
           />
         </Suspense>
       </section>
-
-      {/* Pagination Section - Will need total count from ReportListWrapper eventually */}
-      {/* For now, pagination component is just a placeholder */}
-      <footer className="flex justify-center">
-        {/* 
-          The Pagination component will eventually need the 'total' count. 
-          This count is fetched within ReportListWrapper. We might need to adjust 
-          how this data is passed or fetch the count separately here. 
-          For now, rendering placeholder/client component which handles its own logic based on URL.
-        */}
-        {/* <ReportsPagination 
-          page={page} 
-          limit={limit} 
-          // Total needs to be passed from the list response
-        /> */}
-        <p className="text-sm text-muted-foreground">Paginacja (do implementacji)</p> 
-      </footer>
     </div>
   );
 }
