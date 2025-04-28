@@ -4,8 +4,9 @@ import { Session } from '@supabase/supabase-js';
 
 export const config = {
   matcher: [
-      '/((?!_next/static|_next/image|favicon.ico|public|auth|login|register|reset-password|update-password|api/auth).*)',
-      '/api/reports/:path*'
+    // Tylko chronione ścieżki, landing page (/) jest publiczny
+    '/(protected)/:path*',
+    '/api/reports/:path*'
   ],
 };
 
